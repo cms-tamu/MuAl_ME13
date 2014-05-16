@@ -1,0 +1,31 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+<use name="FWCore/ServiceRegistry"/>
+<use name="FWCore/Utilities"/>
+<use name="DataFormats/MuonReco"/>
+<use name="DataFormats/TrackReco"/>
+<use name="CommonTools/UtilAlgos"/>
+<use name="DataFormats/MuonDetId"/>
+<use name="DataFormats/TrackingRecHit"/>
+<use name="MagneticField/Records" />
+<use name="MagneticField/Engine" />
+<use name="CommonTools/Utils"/>
+<use name="Geometry/CSCGeometry"/>
+<use name="Geometry/DTGeometry"/>
+<use name="Geometry/TrackerGeometryBuilder"/>
+<use name="Geometry/CommonDetUnit"/>
+<use name="TrackingTools/TrackFitters"/>
+<use name="TrackingTools/Records"/>
+<use name="Alignment/CommonAlignment"/>
+<use name="RecoMuon/TransientTrackingRecHit"/>
+<use name="TrackingTools/TransientTrack" />
+<use name="clhep"/>
+<use name="root"/>
+<use name="rootcore"/>
+<use name="rootminuit"/>
+<flags EDM_PLUGIN="1"/>
+<export>
+    <lib name="1"/>
+</export>
+
