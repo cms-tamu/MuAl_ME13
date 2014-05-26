@@ -1,0 +1,18 @@
+/AlignableCSCChamber.h/1.13/Wed Mar 26 21:58:50 2008//
+/AlignableCSCEndcap.h/1.11/Thu Sep 15 09:40:22 2011//
+/AlignableCSCRing.h/1.4/Thu Sep 15 10:07:07 2011//
+/AlignableCSCStation.h/1.13/Thu Sep 15 10:07:07 2011//
+/AlignableDTBarrel.h/1.11/Thu Sep 15 10:07:07 2011//
+/AlignableDTChamber.h/1.13/Wed Mar 26 21:58:55 2008//
+/AlignableDTStation.h/1.11/Thu Sep 15 10:07:07 2011//
+/AlignableDTSuperLayer.h/1.1/Wed Mar 26 21:59:00 2008//
+/AlignableDTWheel.h/1.11/Thu Sep 15 10:07:07 2011//
+/AlignableMuon.h/1.22/Tue Jun  7 19:28:47 2011//
+/MuonAlignment.h/1.16/Thu Sep 15 11:52:25 2011//
+/MuonAlignmentInputDB.h/1.2/Wed Oct  7 20:46:38 2009//
+/MuonAlignmentInputMethod.h/1.2/Thu Mar 20 21:39:26 2008//
+/MuonAlignmentInputSurveyDB.h/1.1/Sat Mar 15 20:26:46 2008//
+/MuonAlignmentInputXML.h/1.9/Tue Jun  7 19:28:47 2011//
+/MuonAlignmentOutputXML.h/1.4/Tue Jun  7 19:28:47 2011//
+/MuonScenarioBuilder.h/1.6/Tue Jun  7 19:28:47 2011//
+D

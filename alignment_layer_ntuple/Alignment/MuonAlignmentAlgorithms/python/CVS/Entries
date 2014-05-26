@@ -1,0 +1,20 @@
+/CSCOverlapsAlignmentAlgorithm_cff.py/1.1/Tue May  4 19:10:31 2010//
+/CSCOverlapsAlignmentAlgorithm_cfi.py/1.5/Thu May 13 08:58:22 2010//
+/CSCOverlapsAlignmentAlgorithm_diskfitters_cff.py/1.1/Thu May 13 08:58:45 2010//
+/CSCOverlapsAlignmentAlgorithm_ringfitters_cff.py/1.1/Thu May 13 08:58:45 2010//
+/MuonAlignmentFromReference_cff.py/1.5/Wed Oct 12 23:55:00 2011//
+/MuonAlignmentFromReference_cfi.py/1.8/Wed Oct 12 23:55:00 2011//
+/MuonAlignmentPreFilter_cfi.py/1.1/Fri Apr 15 21:59:00 2011//
+/MuonChamberSelectors_cff.py/1.1/Fri Dec 12 10:54:10 2008//
+/MuonDTLocalMillepedeAlgorithmFit_cfi.py/1.1/Wed Feb 24 09:09:10 2010//
+/MuonDTLocalMillepedeAlgorithm_cfi.py/1.1/Wed Feb 24 09:09:10 2010//
+/MuonMillepedeAlgorithm_cfi.py/1.1/Fri Dec 12 18:02:18 2008//
+/MuonMillepedeTrackRefitter_cfi.py/1.1/Fri Dec 12 18:02:18 2008//
+/MuonStationSelectors_cff.py/1.1/Fri Dec 12 10:54:10 2008//
+/Reference_intrackfit_cff.py/1.1/Thu Mar 26 23:37:17 2009//
+/alignBH_cfg.py/1.9/Sat Dec 25 20:23:28 2010//
+/align_cfg.py/1.14/Wed Oct 12 23:57:07 2011//
+/convertToXML_global_cfg.py/1.1/Tue May  4 23:06:28 2010//
+/gatherBH_cfg.py/1.10/Sat Dec 25 20:23:28 2010//
+/gather_cfg.py/1.17/Thu Oct 13 00:00:11 2011//
+D

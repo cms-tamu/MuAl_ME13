@@ -1,0 +1,26 @@
+/CSCPairConstraint.h/1.2/Wed May  5 04:00:38 2010//
+/DTMuonLocalAlignment.h/1.2/Thu Feb 25 11:33:32 2010//
+/DTMuonMillepede.h/1.3/Thu Sep 15 08:52:14 2011//
+/DTMuonSLToSL.h/1.2/Thu Feb 25 11:33:32 2010//
+/MuonCSCChamberResidual.h/1.3/Wed Oct 12 23:40:24 2011//
+/MuonChamberResidual.h/1.7/Wed Oct 12 23:40:24 2011//
+/MuonDT13ChamberResidual.h/1.3/Wed Oct 12 23:40:24 2011//
+/MuonDT2ChamberResidual.h/1.3/Wed Oct 12 23:40:24 2011//
+/MuonHitsChamberResidual.h/1.1/Wed Oct 12 23:32:07 2011//
+/MuonInfoTuple.h/1.2/Thu Feb 25 11:33:32 2010//
+/MuonResiduals1DOFFitter.h/1.5/Wed Oct 12 23:18:05 2011//
+/MuonResiduals5DOFFitter.h/1.6/Wed Oct 12 23:44:10 2011//
+/MuonResiduals6DOFFitter.h/1.6/Wed Oct 12 23:44:10 2011//
+/MuonResiduals6DOFrphiFitter.h/1.6/Wed Oct 12 23:44:10 2011//
+/MuonResidualsAngleFitter.h/1.11/Wed Oct 12 23:18:05 2011//
+/MuonResidualsBfieldAngleFitter.h/1.6/Wed Oct 12 23:18:05 2011//
+/MuonResidualsFitter.h/1.18/Wed Nov  2 19:59:46 2011//
+/MuonResidualsFromTrack.h/1.4/Wed Oct 12 23:40:24 2011//
+/MuonResidualsPositionFitter.h/1.9/Wed Oct 12 23:18:05 2011//
+/MuonResidualsTwoBin.h/1.11/Wed Oct 12 23:45:21 2011//
+/MuonTrackCSCChamberResidual.h/1.1/Wed Oct 12 23:32:07 2011//
+/MuonTrackDT13ChamberResidual.h/1.1/Wed Oct 12 23:32:08 2011//
+/MuonTrackDT2ChamberResidual.h/1.1/Wed Oct 12 23:32:08 2011//
+/ReadPGInfo.h/1.4/Mon Mar 29 13:18:43 2010//
+/SegmentToTrackAssociator.h/1.4/Mon Jul 16 07:14:42 2012//
+D
