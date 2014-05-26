@@ -7,7 +7,7 @@ Set up working area:
 ``` bash
 mkdir layer_info
 cd layer_info
-git clone http://github.com/cms-tamu/MuAl_ME13.git
+git clone https://github.com/cms-tamu/MuAl_ME13.git
 cmsrel CMSSW_5_3_6_patch1
 cd CMSSW_5_3_6_patch1/src
 cp -rp ../../MuAl_ME13/alignment_layer_ntuple/* .
