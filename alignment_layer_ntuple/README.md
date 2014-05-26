@@ -43,6 +43,10 @@ Now run using this example line:
 --gprcd inertGlobalPositionRcd --gprcdconnect sqlite_file:inertGlobalPositionRcd.db  --createAlignNtuple -j 1 \
 --isMC --createLayerNtuple --layerPlots
 ```
+And, finally, submit via
+``` bash
+. MuonFilter_2012_MEp_1_3_17_MC_TEST.sh
+```
 
 This will run over 10k events and should take no more than 12 minutes to run.
 
