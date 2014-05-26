@@ -55,6 +55,12 @@ envNtuple = os.getenv("ALIGNMENT_CREATEALIGNNTUPLE")
 if envNtuple is not None:
   if envNtuple=='True': createAlignNtuple = True
 
+# optionally: create layer ntuples along with tmp files
+createLayerNtuple = False
+envLayerNtuple = os.getenv("ALIGNMENT_CREATELAYERNTUPLE")
+if envLayerNtuple is not None:
+  if envLayerNtuple=='True': createLayerNtuple = True
+
 
 process = cms.Process("ALIGN")
 
@@ -109,6 +115,7 @@ process.looper.algoConfig.maxResSlopeY = maxResSlopeY
 process.looper.algoConfig.residualsModel = cms.string(residualsModel)
 process.looper.algoConfig.peakNSigma = peakNSigma
 process.looper.algoConfig.createNtuple = createAlignNtuple
+process.looper.algoConfig.createLayerNtuple = createLayerNtuple
 process.looper.algoConfig.doDT = doDT
 process.looper.algoConfig.doCSC = doCSC
 process.looper.algoConfig.useResiduals = cms.string(useResiduals)

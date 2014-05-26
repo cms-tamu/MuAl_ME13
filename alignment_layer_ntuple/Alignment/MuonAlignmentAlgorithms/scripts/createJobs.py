@@ -229,6 +229,10 @@ parser.add_option("--createAlignNtuple",
                   help="if invoked, debug ntuples with residuals would be created during gather jobs",
                   action="store_true",
                   dest="createAlignNtuple")
+parser.add_option("--createLayerNtuple",
+                  help="if invoked, debug ntuples with residuals would be created during gather jobs",
+                  action="store_true",
+                  dest="createLayerNtuple")
 parser.add_option("--residualsModel",
                   help="functional residuals model. Possible vaslues: pureGaussian2D (default), pureGaussian, GaussPowerTails, ROOTVoigt, powerLawTails",
                   type="string",
@@ -267,6 +271,10 @@ parser.add_option("--extraPlots",
                   help="produce additional plots with geometry, reports differences, and corrections visulizations",
                   action="store_true",
                   dest="extraPlots")
+parser.add_option("--layerPlots",
+                  help="produce additional plots with layer-based visualizations",
+                  action="store_true",
+                  dest="layerPlots")
 
 if len(sys.argv) < 5:
     raise SystemError, "Too few arguments.\n\n"+parser.format_help()
@@ -318,6 +326,7 @@ residualsModel = options.residualsModel
 peakNSigma = options.peakNSigma
 preFilter = not not options.preFilter
 extraPlots = options.extraPlots
+layerPlots = options.layerPlots
 useResiduals = options.useResiduals
 
 
@@ -326,6 +335,7 @@ useResiduals = options.useResiduals
 doCleanUp = not options.noCleanUp
 createMapNtuple = not not options.createMapNtuple
 createAlignNtuple = not not options.createAlignNtuple
+createLayerNtuple = not not options.createLayerNtuple
 
 doCSC = True
 if options.noCSC: doCSC = False
@@ -425,6 +435,7 @@ export ALIGNMENT_DO_CSC=%(doCSC)s
 export ALIGNMENT_JSON=%(json_file)s
 export ALIGNMENT_CREATEMAPNTUPLE=%(createMapNtuple)s
 export ALIGNMENT_CREATEALIGNNTUPLE=%(createAlignNtuple)s
+export ALIGNMENT_CREATELAYERNTUPLE=%(createLayerNtuple)s
 export ALIGNMENT_PREFILTER=%(preFilter)s
 
 
@@ -480,7 +491,7 @@ export ALIGNMENT_MINALIGNMENTHITS=%(minAlignmentHits)s
 export ALIGNMENT_COMBINEME11=%(combineME11)s
 export ALIGNMENT_MAXRESSLOPEY=%(maxResSlopeY)s
 export ALIGNMENT_CLEANUP=%(doCleanUp)s
-export ALIGNMENT_CREATEALIGNNTUPLE=%(createAlignNtuple)s
+export ALIGNMENT_CREATELAYERNTUPLE=%(createLayerNtuple)s
 export ALIGNMENT_RESIDUALSMODEL=%(residualsModel)s
 export ALIGNMENT_PEAKNSIGMA=%(peakNSigma)s
 export ALIGNMENT_USERESIDUALS=%(useResiduals)s
@@ -552,6 +563,7 @@ def writeValidationCfg(fname, my_vars):
 export ALIGNMENT_CAFDIR=`pwd`
 mkdir files
 mkdir out
+mkdir layer_plots
 
 cd %(pwd)s
 eval `scramv1 run -sh`
@@ -561,6 +573,7 @@ ALIGNMENT_MAPPLOTS=None
 ALIGNMENT_SEGDIFFPLOTS=None
 ALIGNMENT_CURVATUREPLOTS=None
 ALIGNMENT_EXTRAPLOTS=%(extraPlots)s
+ALIGNMENT_LAYERPLOTS=%(layerPlots)s
 export ALIGNMENT_GPRCDCONNECT=%(gprcdconnect)s
 export ALIGNMENT_GPRCD=%(gprcd)s
 export ALIGNMENT_DO_DT=%(doDT)s
@@ -577,6 +590,8 @@ cp -f createTree.py $ALIGNMENT_CAFDIR/
 cp -f signConventions.py $ALIGNMENT_CAFDIR/
 cp -f convertSQLiteXML.py $ALIGNMENT_CAFDIR/
 cp -f wrapperExtraPlots.sh $ALIGNMENT_CAFDIR/
+cp -f layerPlots.py $ALIGNMENT_CAFDIR/
+cp -f indexbase.php $ALIGNMENT_CAFDIR/
 cd -
 cp Alignment/MuonAlignmentAlgorithms/test/browser/tree* $ALIGNMENT_CAFDIR/out/
 
@@ -648,6 +663,13 @@ ls -l out/
 timestamp=`date +%%Y%%m%%d%%H%%M%%S`
 tar czf %(validationLabel)s_${timestamp}.tgz out
 cp -f %(validationLabel)s_${timestamp}.tgz $ALIGNMENT_AFSDIR/
+
+# layer plots
+if [ $ALIGNMENT_LAYERPLOTS == \"True\" ]; then
+  python layerPlots.py $ALIGNMENT_CAFDIR/files/%(director1)s_plotting.root
+  tar czf %(validationLabel)s_${timestamp}_layer_plots.tgz layer_plots
+  cp -f %(validationLabel)s_${timestamp}_layer_plots.tgz $ALIGNMENT_AFSDIR/
+fi  
 
 """ % my_vars)
 

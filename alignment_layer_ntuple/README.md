@@ -1,7 +1,6 @@
 # Summary
 This package allows for the collection of layer information (hit positions, trajectory positions, residuals, etc.)
 TODO for CSC right now, but will add DT
-TODO autoplotting in validation script (add separate script maybe?)
 
 # Instructions
 Set up working area:
@@ -26,7 +25,7 @@ ln -s Alignment/MuonAlignmentAlgorithms/python/align_cfg.py
 ln -s Alignment/MuonAlignmentAlgorithms/src/MuonResidualsFromTrack.cc
 ```
 
-Soft links for the `*.cc` files are for convenience, as they are the only files (along with their corresponding header files) that I edited for layer information collection. `CSCTTree.h` was created to contain the layer information structure.
+Soft links for the `*.cc` files are for convenience, as they are the files (along with their corresponding header files) that I edited for layer information collection. `CSCTTree.h` was created to contain the layer information structure.
 
 `createJobs.py` and `gather_cfg.py` were both modified to allow for easy switching between data and MC alignment using a `--isMC` flag in the `createJobs.py` line (example provided later on).
 
@@ -41,7 +40,12 @@ Now run using this example line:
 --user_mail 157866test@gmail.com --minTrackPt 30 --maxTrackPt 200 --maxDxy 0.2 --minNCrossedChambers 1 \
 --residualsModel pureGaussian --peakNSigma 2. --station123params 000010 --station4params 000010 --cscparams 100001 \
 --useResiduals 1100 --noDT --mapplots --curvatureplots --segdiffplots --extraPlots --globalTag MC_53_V14::All \
---gprcd inertGlobalPositionRcd --gprcdconnect sqlite_file:inertGlobalPositionRcd.db  --createAlignNtuple -j 1 --isMC
+--gprcd inertGlobalPositionRcd --gprcdconnect sqlite_file:inertGlobalPositionRcd.db  --createAlignNtuple -j 1 \
+--isMC --createLayerNtuple --layerPlots
 ```
 
 This will run over 10k events and should take no more than 12 minutes to run.
+
+Note that the `--isMC` flag was added to accomodate MC inputs. `--createLayerNtuple` collects layer information and places it in the *_plotting.root file inside of the alignment job's directory. `--layerPlots` will take this layer information and produce plots in a tree-like directory structure. Each folder will contain a PHP file allowing for easy viewing of the plots in the directories if they are copied over to a website.
+
+In this example, `MuonFilter_2012_MEp_1_3_17_MC_TEST_01/MuonFilter_2012_MEp_1_3_17_MC_TEST_01_plotting.root` will contain a TTree `csc_layer_ttree` with layer information. The .tgz file in the `CMSSW_5_3_6_patch1/src` directory that normally contains the plots will be accompanied by another .tgz file with the layer plots.

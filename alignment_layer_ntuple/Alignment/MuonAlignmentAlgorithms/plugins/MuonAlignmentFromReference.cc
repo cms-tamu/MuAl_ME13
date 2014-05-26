@@ -321,6 +321,7 @@ private:
   std::string m_reportFileName;
   double m_maxResSlopeY;
   bool m_createNtuple;
+  bool m_createLayerNtuple;
   double m_peakNSigma;
   int m_BFieldCorrection;
   bool m_doDT;
@@ -404,6 +405,7 @@ MuonAlignmentFromReference::MuonAlignmentFromReference(const edm::ParameterSet &
   , m_reportFileName(cfg.getParameter<std::string>("reportFileName"))
   , m_maxResSlopeY(cfg.getParameter<double>("maxResSlopeY"))
   , m_createNtuple(cfg.getParameter<bool>("createNtuple"))
+  , m_createLayerNtuple(cfg.getParameter<bool>("createLayerNtuple"))
   , m_peakNSigma(cfg.getParameter<double>("peakNSigma"))
   , m_BFieldCorrection(cfg.getParameter<int>("bFieldCorrection"))
   , m_doDT(cfg.getParameter<bool>("doDT"))
@@ -423,7 +425,7 @@ MuonAlignmentFromReference::MuonAlignmentFromReference(const edm::ParameterSet &
   if (m_createNtuple) bookNtuple();
   
   m_ttree_CSC_layers = NULL;
-  bookNtupleLayers();
+  if (m_createLayerNtuple) bookNtupleLayers();
 
   m_counter_events = 0;
   m_counter_tracks = 0;
@@ -513,19 +515,6 @@ void MuonAlignmentFromReference::bookNtupleLayers()
 	m_ttree_CSC_layers->Branch("res_x", &(layerData.v_resx), "res_x[6]/F");
 	m_ttree_CSC_layers->Branch("res_y", &(layerData.v_resy), "res_y[6]/F");
 
-	/*for(int i=0; i<6; i++)
-	{
-		std::stringstream s;
-		s << i+1;
-		std::string num = s.str();
-        m_ttree_CSC_layers->Branch(("lay"+num+"_x").c_str(), &(layerData.v_hitx[i]), ("lay"+num+"_x"+"/F").c_str());
-        m_ttree_CSC_layers->Branch(("lay"+num+"_y").c_str(), &(layerData.v_hity[i]), ("lay"+num+"_y"+"/F").c_str());
-
-        m_ttree_CSC_layers->Branch(("lay"+num+"_res_x").c_str(), &(layerData.v_resx[i]), ("lay"+num+"_res_x"+"/F").c_str());
-        m_ttree_CSC_layers->Branch(("lay"+num+"_res_y").c_str(), &(layerData.v_resy[i]), ("lay"+num+"_res_y"+"/F").c_str());
-	}*/
-	
-    
     
 }
 
