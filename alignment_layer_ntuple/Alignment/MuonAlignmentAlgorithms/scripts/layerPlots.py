@@ -33,6 +33,23 @@ def chamberRadius(type, station, ringwheel):
     else:
         return signConventions[("DT", station, ringwheel, 1)][3]
 
+def plotRanges(station, ring):
+    if(station is 1):
+        if(ring is 1): return 30, 80
+        if(ring is 2): return 60, 100
+        if(ring is 3): return 60, 100
+    if(station is 2):
+        if(ring is 1): return 80, 120
+        if(ring is 2): return 80, 180
+    if(station is 3):
+        if(ring is 1): return 80, 150
+        if(ring is 2): return 70, 110
+    if(station is 4):
+        if(ring is 1): return 80, 150
+        if(ring is 2): return 80, 150
+    
+    return
+
 def chamberPrettyString(type, endcap, station, ringwheel, chamber):
     if(type == "CSC"):
         prefix = "+" if endcap is 1 else "-"
@@ -123,8 +140,14 @@ def makePlotsCSC(chamberKey):
     
     nXbins, nYbins = 50, 50
     XMax, YMax = 60., 100.
-
+    station = chamberKey[2]
+    ring = chamberKey[3]
     prettyStr = chamberPrettyString(*chamberKey)
+    try:
+        XMax, YMax = plotRanges(station, ring)
+        print ">>> [%s] Detected ME%d/%d, so using XMax = %d and YMax = %d" % (prettyStr, station, ring, XMax, YMax)
+    except: pass
+
     for i in range(6):
         laypfx = "L" + str(i+1) + " "
         # print laypfx
@@ -139,9 +162,9 @@ def makePlotsCSC(chamberKey):
 
         h1D_res_x.append(  r.TH1F(laypfx + "h1D_res_x", laypfx + "x residuals;cm;counts",  100,-8.0,8.0)  )
 
-        h1D_res_x_rproj.append(  r.TProfile(laypfx + "h1D_res_x_rproj", laypfx + "x residual vs r;cm;cm",  nYbins,-75.0,75.0)  )
+        h1D_res_x_rproj.append(  r.TProfile(laypfx + "h1D_res_x_rproj", laypfx + "x residual vs r;cm;cm",  nYbins,-YMax,YMax)  )
         # h1D_res_x_xproj.append(  r.TProfile(laypfx + "h1D_res_x_xproj", laypfx + "x residual vs x",  nXbins,-100.0,100.0)  )
-        h1D_res_x_rphiproj.append(  r.TProfile(laypfx + "h1D_res_x_rphiproj", laypfx + "x residual vs rphi;cm;cm",  nXbins,-70.0,70.0)  )
+        h1D_res_x_rphiproj.append(  r.TProfile(laypfx + "h1D_res_x_rphiproj", laypfx + "x residual vs rphi;cm;cm",  nXbins,-YMax,YMax)  )
 
         # there are 2.530335 cm between each of the 48 wgs, so to get a binsize of 2.530335, we need (80-(-80))/2.530335=63.2=64 bins
         # h1D_res_rphi_yproj.append(  r.TProfile(laypfx + "h1D_res_rphi_yproj", laypfx + "rphi residual vs local y",  64,-80.0,80.0)  )
