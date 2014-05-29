@@ -56,4 +56,4 @@ In this example, `MuonFilter_2012_MEp_1_3_17_MC_TEST_01/MuonFilter_2012_MEp_1_3_
 ``` bash
 tar xzf MuonFilter_2012_MEp_1_3_17_MC_TEST_20140528235539_layer_plots.tgz
 ```
-prouces a folder called `layer_plots/` which can then be copied to a web area and browsed using the directory and index PHP pages.
+produces a folder called `layer_plots/` which can then be copied to a web area and browsed using the directory and index PHP pages.
