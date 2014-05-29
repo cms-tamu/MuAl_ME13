@@ -7,7 +7,7 @@ Set up working area:
 ``` bash
 mkdir layer_info
 cd layer_info
-git clone http://github.com/cms-tamu/MuAl_ME13.git
+git clone https://github.com/cms-tamu/MuAl_ME13.git
 cmsrel CMSSW_5_3_6_patch1
 cd CMSSW_5_3_6_patch1/src
 cp -rp ../../MuAl_ME13/alignment_layer_ntuple/* .
@@ -42,6 +42,10 @@ Now run using this example line:
 --useResiduals 1100 --noDT --mapplots --curvatureplots --segdiffplots --extraPlots --globalTag MC_53_V14::All \
 --gprcd inertGlobalPositionRcd --gprcdconnect sqlite_file:inertGlobalPositionRcd.db  --createAlignNtuple -j 1 \
 --isMC --createLayerNtuple --layerPlots
+```
+And, finally, submit via
+``` bash
+. MuonFilter_2012_MEp_1_3_17_MC_TEST.sh
 ```
 
 This will run over 10k events and should take no more than 12 minutes to run.
