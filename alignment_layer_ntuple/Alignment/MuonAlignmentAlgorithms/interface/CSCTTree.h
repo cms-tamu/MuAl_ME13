@@ -26,6 +26,9 @@ typedef struct CSCLayerData {
     Float_t v_hitx[6], v_hity[6];
     Float_t v_resx[6], v_resy[6];
 
+    // not in ttree, but for other purposes
+    Bool_t doFill;
+
     CSCLayerData()
     {
         charge = 0;
@@ -41,6 +44,7 @@ typedef struct CSCLayerData {
         pt = BADVAL;
         pz = BADVAL;
         eta = BADVAL;
+        doFill = false;
         for(int i = 0; i < 6; i++) {
             v_hitx[i] = BADVAL;
             v_hity[i] = BADVAL;
@@ -63,6 +67,7 @@ typedef struct CSCLayerData {
         pt = x.pt;
         pz = x.pz;
         eta = x.eta;
+        doFill = x.doFill;
 
         for(int i = 0; i < 6; i++) {
             v_hitx[i] = x.v_hitx[i];

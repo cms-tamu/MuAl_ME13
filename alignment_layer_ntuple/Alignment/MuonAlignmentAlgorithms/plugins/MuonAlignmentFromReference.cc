@@ -415,7 +415,7 @@ MuonAlignmentFromReference::MuonAlignmentFromReference(const edm::ParameterSet &
   // alignment requires a TFile to provide plots to check the fit output
   // just filling the residuals lists does not
   // but we don't want to wait until the end of the job to find out that the TFile is missing
-  if (m_doAlignment || m_createNtuple) {
+  if (m_doAlignment || m_createNtuple || m_createLayerNtuple) {
     edm::Service<TFileService> fs;
     TFile &tfile = fs->file();
     tfile.ls();
@@ -425,7 +425,10 @@ MuonAlignmentFromReference::MuonAlignmentFromReference(const edm::ParameterSet &
   if (m_createNtuple) bookNtuple();
   
   m_ttree_CSC_layers = NULL;
-  if (m_createLayerNtuple) bookNtupleLayers();
+  if (m_createLayerNtuple) {
+    layerData.doFill = true;
+    bookNtupleLayers();
+  }
 
   m_counter_events = 0;
   m_counter_tracks = 0;

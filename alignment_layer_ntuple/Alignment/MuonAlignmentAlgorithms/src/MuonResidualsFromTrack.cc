@@ -63,6 +63,7 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
   layerData->eta = m_recoTrack->eta();
   layerData->pz = m_recoTrack->pz();
   layerData->pt = m_recoTrack->pt();
+  layerData->charge = m_recoTrack->charge();
 
   int iT = 0, iM = 0;
   int iCSC = 0, iDT = 0;
@@ -372,7 +373,6 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
 
 
                   //nja
-                      layerData->charge = m_recoTrack->charge();
                       layerData->v_hitx[cscDetId.layer()-1] = hit->localPosition().x();
                       layerData->v_hity[cscDetId.layer()-1] = hit->localPosition().y();
 
@@ -393,7 +393,7 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
             } else { /*(*layerData).select = false;*/ }
           }
           
-          layerTree->Fill();  
+          if(layerData->doFill) layerTree->Fill();  
             
           } else if ( hitId2.subdetId() == MuonSubdetId::RPC ) {
             std::cout << "Muon Hit in RPC" << std::endl;
