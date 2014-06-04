@@ -189,18 +189,13 @@ minPt = 9999.0
 
 for i,muon in enumerate(tt):
     nMuons += 1
-    pt = 45
+    if(not muon.select): continue
+    if(muon.nlayers < 6): continue
+    pt = muon.pz
 
     ## q/pt equalization actually uses pz
-    try: 
-        if(abs(muon.pz) > 30): pt = abs(muon.pz)
-        #print muon.pz
-    except:
-        try:
-            if(muon.pt > 30): pt = muon.pt
-        except: pass
         
-    endcap, station, ring, chamber = struct.unpack("b", muon.endcap)[0], struct.unpack("b", muon.station)[0], struct.unpack("b", muon.ring)[0], struct.unpack("b", muon.chamber)[0]
+    endcap, station, ring, chamber = ord(muon.endcap), ord(muon.station), ord(muon.ring), ord(muon.chamber)
     if (not (selectedCSC == (endcap, station, ring, chamber))): continue
 
             
@@ -232,6 +227,8 @@ for idx, muon in enumerate(tt):
     if(count % 10000 == 0): print count 
 
     # if(count > 5000): break
+    if(not muon.select): continue
+    if(muon.nlayers < 6): continue
     
     endcap, station, ring, chamber = ord(muon.endcap), ord(muon.station), ord(muon.ring), ord(muon.chamber)
     if muon.charge == 1:
@@ -255,12 +252,12 @@ for idx, muon in enumerate(tt):
         sumr = 0.0
         sumxcnt = 0
 
-        # fid cuts FIXME (fix later)
         skipTrack = False
         for i in range(NUMLAYERS):
-            layStr = "muon.lay%i_" % (i+1)
-            actual_x, actual_y = eval(layStr+"x"), eval(layStr+"y")
-            res_x, res_y = eval(layStr+"res_x"), eval(layStr+"res_y")
+            if(i != 2): continue  # only apply fiducial cuts on layer 3
+
+            actual_x, actual_y = muon.hit_x[i], muon.hit_y[i]
+            res_x, res_y = muon.res_x[i], muon.res_y[i]
             track_x = actual_x + res_x
             track_y = actual_y + res_y
             angle = math.atan(1.0 * actual_x / (ME13pinR + actual_y))
@@ -268,7 +265,7 @@ for idx, muon in enumerate(tt):
             angle_ytrack = math.atan(1.0 * actual_x / (ME13pinR + track_y))
             rphi_track = (ME13pinR)*math.atan(track_x / (ME13pinR + actual_y))
             rphi_ytrack = (ME13pinR)*math.atan(track_x / (ME13pinR + track_y))
-
+            
             if(doBoxCuts):
                 # MC removes box
                 if(actual_x > 18.0 and (20.0 < actual_y < 65.0)): 
@@ -303,23 +300,14 @@ for idx, muon in enumerate(tt):
         
         for i in range(NUMLAYERS):
         
-            layStr = "muon.lay%i_" % (i+1)
-           
-          
-
-            actual_x, actual_y = eval(layStr+"x"), eval(layStr+"y")
-            res_x, res_y = eval(layStr+"res_x"), eval(layStr+"res_y")
-
-            # propagated track = actual + residual
+            actual_x, actual_y = muon.hit_x[i], muon.hit_y[i]
+            res_x, res_y = muon.res_x[i], muon.res_y[i]
             track_x = actual_x + res_x
             track_y = actual_y + res_y
-            #track_x = (eval(layStr+"x") + eval(layStr+"res_x"))
-            #track_y = (eval(layStr+"y") + eval(layStr+"res_y"))
+            angle = math.atan(1.0 * actual_x / (ME13pinR + actual_y))
 
             if( actual_x < -998.0 or actual_y < -998.0): continue
             if( res_x < -998.0 or res_y < -998.0): continue
-            #if( (eval(layStr+"x") == -999) or (eval(layStr+"y") == -999) ): continue
-            #if( (eval(layStr+"res_x") == -999) or (eval(layStr+"res_y") == -999) ): continue
             
             
             angle = math.atan(1.0 * actual_x / (ME13pinR + actual_y))

@@ -129,6 +129,17 @@ def fitCut(hist, sigmas, opts):
     lower, upper = hist.GetMean()-sigmas*hist.GetRMS(), hist.GetMean()+sigmas*hist.GetRMS()
     hist.Fit("gaus",opts, "", lower, upper)
 
+def getFitParamsGauss(hist):
+    fit = hist.GetFunction("gaus")
+    
+    p0 = fit.GetParameter(0) # const
+    p0e = fit.GetParError(0) # const
+    
+    p1 = fit.GetParameter(1) # mean
+    p1e = fit.GetParError(1) # mean error
+    
+    return p0, p0e, p1, p1e
+
 def makePlotsCSC(chamberKey):
     h2D_cnt_actual = []
     h2D_cnt_tracks = []
@@ -137,6 +148,8 @@ def makePlotsCSC(chamberKey):
     h1D_res_x_rproj = []
     h1D_res_x_rphiproj = []
     h1D_res_x = []
+
+    h1D_trans_layers = r.TH1F("h1D_trans_layers", "x offset vs layer;layer number;x offset (microns)",  6,0.5,6.5  )
     
     nXbins, nYbins = 50, 50
     XMax, YMax = 60., 100.
@@ -224,7 +237,8 @@ def makePlotsCSC(chamberKey):
     prefix = chamberToDirectoryPath(*chamberKey)
     os.system("mkdir -p %s" % (prefix))
     os.system("cp -pv" + " indexbase.php " + prefix+"_index.php") #
-    
+   
+    layerTranslation = []
     for i in range(6):
 
         r.gStyle.SetPalette(1)
@@ -256,38 +270,40 @@ def makePlotsCSC(chamberKey):
         h2D_res_x_tracks[i].Draw("colz")
         c1.SaveAs(prefix + "h2D_res_x_tracks" + suffix)
 
-        
-
-
         r.gStyle.SetOptFit(1) # display fitting parameters
 
-        # setAxisTitles(h1D_res_x_rproj[i], "cm", "cm")
         h1D_res_x_rproj[i].GetYaxis().SetRangeUser(-1.4, 1.4)
-        # h1D_res_x_rproj[i].BuildOptions(0,0,"")
         h1D_res_x_rproj[i].Draw("E0")
         h1D_res_x_rproj[i].Fit("pol1","QC")
         c1.SaveAs(prefix + "h1D_res_x_rproj" + suffix)
 
        
-        # setAxisTitles(h1D_res_x_rphiproj[i], "cm", "cm")
         h1D_res_x_rphiproj[i].GetYaxis().SetRangeUser(-2.0, 2.0)
-        #h1D_res_x_rphiproj[i].GetXaxis().SetRangeUser(-0.1, 0.1)
         h1D_res_x_rphiproj[i].Draw("E0")
         h1D_res_x_rphiproj[i].Fit("pol1","QC")
         c1.SaveAs(prefix + "h1D_res_x_rphiproj" + suffix)
         
-        # setAxisTitles(h1D_res_x[i], "cm", "counts")
         h1D_res_x[i].Draw()
         fitCut(h1D_res_x[i], nSigma, "QC")
         c1.SaveAs(prefix + "h1D_res_x" + suffix)
+
+        fitparamsGauss = getFitParamsGauss(h1D_res_x[i])
+        layerTranslation.append([fitparamsGauss[2], fitparamsGauss[3]]) #mean,meanerror
+
+
+    for i, val in enumerate(layerTranslation):
+        # convert cm to microns
+        h1D_trans_layers.SetBinContent(i+1, 1.0e4*val[0])
+        h1D_trans_layers.SetBinError(i+1, 1.0e4*val[1])
+
+    h1D_trans_layers.Fit("pol1","QC")
+    h1D_trans_layers.Draw("E0")
+    c1.SaveAs(prefix + "h1D_trans_layers" + ".png")
 
 
     r.gStyle.SetPalette(1)
 
 
-
-
-t1 = time.time()
 
 
 # mu = muon()
@@ -316,7 +332,6 @@ for i,muon in enumerate(tt):
     if(not muon.select): continue
     if(muon.nlayers < 6): continue
     
-    # if(abs(muon.res_x[2] - avg) > 2.0*sig): continue
     
     
     if(muon.charge == 1): charge = 1
@@ -324,28 +339,21 @@ for i,muon in enumerate(tt):
     
     count += 1
     
-    
-    # residuals.append(muon.res_x[2])
-    
     if(chamberKey in dChambers):
         # pz if CSC, but pt if DT
         dChambers[chamberKey].append([i,charge,muon.pz])
             
     else:
-        # dChambers[chamberKey] = {"pos": [], "neg": []}
-        dChambers[chamberKey] = []
+        dChambers[chamberKey] = [[i,charge,muon.pz]]
         
 print ">>> Done looping through all elements in tree"
 
 for chamber in dChambers.keys():
-# for chamber in [("CSC", 1, 1, 3, 17)]:
     nMuons = equalizeCharges(chamber)
-    if(nMuons > 300):
+    if(nMuons > 1000):
+        t1 = time.time()
         makePlotsCSC(chamber)
+        print ">>> [%s] Took %.2f seconds" % (chamberPrettyString(*chamberKey), time.time() - t1)
     else:
         print ">>> [%s] Low statistics, so skipping plots" % (chamberPrettyString(*chamberKey))
 
-    
-
-print "%.2f" % ((time.time() - t1)*1000.0)
-    

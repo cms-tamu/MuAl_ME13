@@ -20,14 +20,14 @@ Here are some basic instructions written by Nick:
 I suppose when uploading to github, I'll keep all of these features for standalone use
 
 I have placed 3 files (excluding the folder) in http://namin.web.cern.ch/namin/alignment/plots/final/ryan/ 
-As an example, MEp_1_3_20_MCRING.root is the output of running over monte carlo using single muon gun shooting into the ME13 ring.
+As an example, MEp_1_3_17_MCTEST.root is the output of running over monte carlo using single muon gun shooting into the ME13 ring.
 indexbase.php is a php file that collects all picture files in a folder and places them in a grid in one html page (so we don't have to click on all the pictures individually to look at them)
 mualvisualMUAL.py is the main python script
 
 Instructions for running:
 1) Ssh into lxplus.cern.ch (note, not lxplus5, since their python version was too low)
 2) Copy these 3 files from above to some area
-3) Run: python mualvisualMUAL.py MEp_1_3_20_MCRING.root
-4) A folder called "MEp_1_3_20_MCRING_plots" will be produced. Inside you will find an _index.php file. 
-5) Clicking on _index.php, for example, here http://namin.web.cern.ch/namin/alignment/plots/final/ryan/MEp_1_3_20_MCRING_plots/ will neatly show all the produced plots
+3) Run: `python mualvisualMUAL.py MEp_1_3_17_MCTEST.root -b`
+4) A folder called "MEp_1_3_17_MCTEST_plots" will be produced. Inside you will find an _index.php file. 
+5) Clicking on _index.php, for example, here http://namin.web.cern.ch/namin/alignment/plots/final/ryan/MEp_1_3_17_MCTEST_plots/ will neatly show all the produced plots
 Tested this procedure just now and it works for me, so let me know if you run into any issues.
