@@ -3,46 +3,30 @@ import struct, math, os, sys
 from array import array
 
 selectedCSC = (1, 2, 2, 1)  # endcap (p-1 m-0), station, wheel, chamber
-#selectedCSC = (1, 1, 3, 1)
-#print selectedCSC
 specialSuffix = ""
-#specialSuffix = "POSNEG"
-#specialSuffix = "_TEST"
-#specialSuffix = "_EDGECUTSTEST"
-#specialSuffix = "_EDGECUTSBOTH"
-#specialSuffix = "_EDGECUTS"
-#specialSuffix = "_BOXCUTS"
-#specialSuffix = "_BOXFIDCUTS"
-#specialSuffix = "_SIDECUTS"
-#specialSuffix = "_POSMU"
-#specialSuffix = "_NEGMU"
-#specialSuffix = "_TESTRES"
-#specialSuffix = "_BINS"
 
 
-doEdgeCuts = (specialSuffix is "_EDGECUTS" or specialSuffix is "_EDGECUTSTEST")
-doBoxCuts = specialSuffix is "_BOXCUTS"
-doBoxFidCuts = specialSuffix is "_BOXFIDCUTS"
 doChargeCut = (specialSuffix is "_POSMU" or specialSuffix is "_NEGMU")
-#doRotate, doTranslate = True, True
 chargeToConsider = 1 if specialSuffix is "_POSMU" else -1
+
 nSigma = 1.5 # number of sigma to do gaussian fit with
 ME13pinR = 595.1500244141 # radius of ME13 ring alignment pin
+isMC = False
 
 
 print ">>> Args:", sys.argv
 if(len(sys.argv) > 1):
     filename = sys.argv[1]
-    if("layers" in filename):
-        cscStr = sys.argv[1].split("_layers")[0]
-    else:
-        cscStr = sys.argv[1].split("_ALI")[0]
-    #print cscStr
-    cscStr = cscStr.split("ME")[1]
+    cscStr = sys.argv[1].split("ME")[1]
     cscInfo = cscStr.split("_")
     if(cscInfo[0] == "p"): cscInfo[0] = 1
     else: cscInfo[0] = 0
     selectedCSC = ( cscInfo[0], int(cscInfo[1]), int(cscInfo[2]), int(cscInfo[3]) )
+    if(cscInfo[4] == "MC"):
+        specialSuffix = cscInfo[5]
+        isMC = True
+    else:
+        specialSuffix = cscInfo[4]
 
     print ">>> Found argument with filename:", filename
     print ">>> Setting selectedCSC to", selectedCSC
@@ -52,10 +36,15 @@ else:
 
 if(specialSuffix is not ""): print ">>> Special suffix is",specialSuffix
     
+prefix = "ME%s_%d_%d_%d" % ("p" if selectedCSC[0] == 1 else "m", selectedCSC[1], selectedCSC[2], selectedCSC[3])
+if(isMC): prefix += "_MC"
+prefix += "_%s_plots/" % (specialSuffix)
+print ">>> Output into folder",prefix
 
-def setAxisTitles(hist, xtitle, ytitle):
-    hist.GetXaxis().SetTitle(xtitle);
-    hist.GetYaxis().SetTitle(ytitle);
+
+#def setAxisTitles(hist, xtitle, ytitle):
+    #hist.GetXaxis().SetTitle(xtitle);
+    #hist.GetYaxis().SetTitle(ytitle);
 
 
 def rProjection(localr, angle):
@@ -92,11 +81,7 @@ def getFitParamsGauss(hist):
 def binData(indexPt, Nbins, minPt):
     d = {}
 
-    #minPt -= 0.01
-
     binWidth = 1.0/abs(minPt)/Nbins
-    #binWidth = 0.0019226
-    #print binWidth, minPt
     
     for i in range(Nbins+1):
         d[i] = []
@@ -124,6 +109,12 @@ def getGoodMuonIndices(posIndexPt, negIndexPt, Nbins, minPt):
 
 c1 = r.TCanvas("Canvas1", "Alignment Visualizations")
 
+typePrefix = "ME%s%d/%d/%d" % ("+" if selectedCSC[0] == 1 else "-", selectedCSC[1], selectedCSC[2], selectedCSC[3])
+if(isMC):
+    typePrefix += " #font[2]{#color[4]{MC}} "
+else:
+    typePrefix += " #font[2]{#color[2]{DATA}} "
+
 nXbins, nYbins = 50, 50
 XMax, YMax = 60., 100.
 NUMLAYERS = 6
@@ -134,47 +125,44 @@ h2D_res_x_actual = []
 h2D_res_x_tracks = []
 h2D_pull_tracks = []
 h1D_res_x_rproj = []
-h1D_res_x_xproj = []
+#h1D_res_x_xproj = []
 h1D_res_x_rphiproj = []
 h1D_res_rphi_yproj = []
 h1D_res_x = []
 h2D_statsig_tracks = []
 
-h1D_res_x_avg = r.TH1F("h1D_res_x_avg", "avg x residuals", 100,-8.0,8.0) 
-h1D_actual_localy = r.TH1F("h1D_actual_localy", "distribution of actual y hits",  nYbins,-75,75)
-h1D_tracks_localy = r.TH1F("h1D_tracks_localy", "distribution of track y hits",  nYbins,-75,75)
-h1D_actual_angle = r.TH1F("h1D_actual_angle", "angular distribution of hits",  nYbins,-0.08,0.08)
-h1D_tracks_angle = r.TH1F("h1D_tracks_angle", "angular distribution of tracks",  nYbins,-0.08,0.08)
-h1D_rot_dxdr_layers = r.TH1F("h1D_rot_dxdr_layers", "phiz (dx/dr) vs layer",  6,0.5,6.5  )
-# h1D_rot_dxdrphi_layers = r.TH1F("h1D_rot_dxdrphi_layers", "phiz (dx/drphi) vs layer",  6,0.5,6.5  )
-h1D_trans_layers = r.TH1F("h1D_trans_layers", "x offset vs layer",  6,0.5,6.5  )
-h1D_res_x_rproj_avg = r.TProfile("h1D_res_x_rproj_avg", "avg x residual vs r",  nYbins,-75.0,75.0)
-h2D_nlayers_hit = r.TProfile2D("h2D_nlayers_hit", "num layers hit",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
-h2D_nDT_hit = r.TProfile2D("h2D_nDT_hit", "num DTs hit",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
-h2D_nCSC_hit = r.TProfile2D("h2D_nCSC_hit", "num CSCs hit",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
-h2D_nTracker_hit = r.TProfile2D("h2D_nTracker_hit", "num tracker hits",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
+#h1D_res_x_avg = r.TH1F("h1D_res_x_avg", "avg x residuals", 100,-8.0,8.0) 
+h1D_actual_localy = r.TH1F("h1D_actual_localy", typePrefix+"distribution of actual y hits;cm;counts",  nYbins,-75,75)
+h1D_tracks_localy = r.TH1F("h1D_tracks_localy", typePrefix+"distribution of track y positions;cm;counts",  nYbins,-75,75)
+h1D_actual_angle = r.TH1F("h1D_actual_angle", typePrefix+"angular distribution of hits;phi;counts",  nYbins,-0.08,0.08)
+h1D_tracks_angle = r.TH1F("h1D_tracks_angle", typePrefix+"angular distribution of tracks;phi;counts",  nYbins,-0.08,0.08)
+h1D_rot_dxdr_layers = r.TH1F("h1D_rot_dxdr_layers", typePrefix+"phiz (dx/dr) vs layer;layer;dx/dr (urad)",  6,0.5,6.5  )
+h1D_trans_layers = r.TH1F("h1D_trans_layers", typePrefix+"x offset vs layer;layer; x offset (microns)",  6,0.5,6.5  )
+h2D_nlayers_hit = r.TProfile2D("h2D_nlayers_hit", typePrefix+"num layers hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
+h2D_nDT_hit = r.TProfile2D("h2D_nDT_hit", typePrefix+"num DTs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
+h2D_nCSC_hit = r.TProfile2D("h2D_nCSC_hit", typePrefix+"num CSCs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
+h2D_nTracker_hit = r.TProfile2D("h2D_nTracker_hit", typePrefix+"num tracker hits;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
 
 for i in range(NUMLAYERS):
-    laypfx = "L" + str(i+1) + " "
+    laypfx = " L" + str(i+1) + " "
     print ">>> Booking histos for layer",i+1
-    # print laypfx
-    h2D_cnt_actual.append(  r.TH2F(laypfx + "h2D_cnt_actual", laypfx + "actual hit locations",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
-    h2D_cnt_tracks.append(  r.TH2F(laypfx + "h2D_cnt_tracks", laypfx + "track hit locations",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
+    h2D_cnt_actual.append(  r.TH2F(laypfx + "h2D_cnt_actual", typePrefix+laypfx + "actual hit locations;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
+    h2D_cnt_tracks.append(  r.TH2F(laypfx + "h2D_cnt_tracks", typePrefix+laypfx + "track locations;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
 
-    h2D_res_x_actual.append(  r.TProfile2D(laypfx + "h2D_res_x_actual", laypfx + "avg (per bin) x residuals at actual hit positions",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
-    h2D_res_x_tracks.append(  r.TProfile2D(laypfx + "h2D_res_x_tracks", laypfx + "avg (per bin) x residuals at track positions",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
+    h2D_res_x_actual.append(  r.TProfile2D(laypfx + "h2D_res_x_actual", typePrefix+laypfx + "avg (per bin) x residuals at actual hit positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
+    h2D_res_x_tracks.append(  r.TProfile2D(laypfx + "h2D_res_x_tracks", typePrefix+laypfx + "avg (per bin) x residuals at track positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
 
-    h2D_pull_tracks.append(  r.TH2F(laypfx + "h2D_pull_tracks", laypfx + "sum of x residuals (pull)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
-    h2D_statsig_tracks.append(  r.TH2F(laypfx + "h2D_statsig_tracks", laypfx + "avg res_x / sigma (significance)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
+    h2D_pull_tracks.append(  r.TH2F(laypfx + "h2D_pull_tracks", typePrefix+laypfx + "sum of x residuals (pull) at track positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
+    h2D_statsig_tracks.append(  r.TH2F(laypfx + "h2D_statsig_tracks", typePrefix+laypfx + "avg res_x / sigma (significance) at track positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
 
-    h1D_res_x.append(  r.TH1F(laypfx + "h1D_res_x", laypfx + "x residuals",  100,-8.0,8.0)  )
+    h1D_res_x.append(  r.TH1F(laypfx + "h1D_res_x", typePrefix+laypfx + "x residuals;x residual (cm);counts",  100,-8.0,8.0)  )
 
-    h1D_res_x_rproj.append(  r.TProfile(laypfx + "h1D_res_x_rproj", laypfx + "x residual vs r",  nYbins,-75.0,75.0)  )
-    h1D_res_x_xproj.append(  r.TProfile(laypfx + "h1D_res_x_xproj", laypfx + "x residual vs x",  nXbins,-100.0,100.0)  )
-    h1D_res_x_rphiproj.append(  r.TProfile(laypfx + "h1D_res_x_rphiproj", laypfx + "x residual vs rphi",  nXbins,-70.0,70.0)  )
+    h1D_res_x_rproj.append(  r.TProfile(laypfx + "h1D_res_x_rproj", typePrefix+laypfx + "x residual vs r;x residual (cm);r (cm)",  50,-75.0,75.0)  )
+    #h1D_res_x_xproj.append(  r.TProfile(laypfx + "h1D_res_x_xproj", laypfx + "x residual vs x",  nXbins,-100.0,100.0)  )
+    h1D_res_x_rphiproj.append(  r.TProfile(laypfx + "h1D_res_x_rphiproj", typePrefix+laypfx + "x residual vs scaled-phi;x residual (cm);scaled-phi (cm)",  50,-75.0,75.0)  )
 
     # there are 2.530335 cm between each of the 48 wgs, so to get a binsize of 2.530335, we need (80-(-80))/2.530335=63.2=64 bins
-    h1D_res_rphi_yproj.append(  r.TProfile(laypfx + "h1D_res_rphi_yproj", laypfx + "rphi residual vs local y",  64,-80.0,80.0)  )
+    h1D_res_rphi_yproj.append(  r.TProfile(laypfx + "h1D_res_rphi_yproj", typePrefix+laypfx + "scaled-phi residual vs local y;rphi residual (cm);local y (cm)",  64,-80.0,80.0)  )
 
 fh = r.TFile(filename)
 tt = r.gDirectory.Get("csc_layer_ttree")
@@ -189,12 +177,8 @@ minPt = 9999.0
 
 for i,muon in enumerate(tt):
     nMuons += 1
-    if(not muon.select): continue
-    if(muon.nlayers < 6): continue
     pt = muon.pz
-
-    ## q/pt equalization actually uses pz
-        
+    if(not muon.select or muon.nlayers < 6): continue
     endcap, station, ring, chamber = ord(muon.endcap), ord(muon.station), ord(muon.ring), ord(muon.chamber)
     if (not (selectedCSC == (endcap, station, ring, chamber))): continue
 
@@ -205,9 +189,7 @@ for i,muon in enumerate(tt):
     else:
         nNegMu += 1
         negIndexPt.append([i,pt])
-    if(pt < minPt):
-        #print pt
-        minPt = pt
+    if(pt < minPt): minPt = pt
 
 # print nMuons
 goodIndices = getGoodMuonIndices(posIndexPt, negIndexPt, 17, minPt)
@@ -219,97 +201,43 @@ goodMuons = {}
 for i in range(nMuons): goodMuons[i] = 0
 for e in goodIndices: goodMuons[e] = 1
 
-nPosMu = 0
-nNegMu = 0
 count = 0
 for idx, muon in enumerate(tt):
     count += 1
     if(count % 10000 == 0): print count 
 
     # if(count > 5000): break
-    if(not muon.select): continue
-    if(muon.nlayers < 6): continue
+    if(not muon.select or muon.nlayers < 6): continue
     
     endcap, station, ring, chamber = ord(muon.endcap), ord(muon.station), ord(muon.ring), ord(muon.chamber)
-    if muon.charge == 1:
-        charge = 1
-        nPosMu += 1
-    else:
-        charge = -1
-        nNegMu += 1
 
     if(doChargeCut and not(charge == chargeToConsider)): continue
 
     if(selectedCSC == (endcap, station, ring, chamber)):
 
-        #h1D_eta_before.Fill(muon.eta)
         
-           # FIXME ANA
         if(goodMuons[idx] != 1): continue
-        #h1D_eta_after.Fill(muon.eta)
-
-        sumx = 0.0
-        sumr = 0.0
-        sumxcnt = 0
-
-        skipTrack = False
-        for i in range(NUMLAYERS):
-            if(i != 2): continue  # only apply fiducial cuts on layer 3
-
-            actual_x, actual_y = muon.hit_x[i], muon.hit_y[i]
-            res_x, res_y = muon.res_x[i], muon.res_y[i]
-            track_x = actual_x + res_x
-            track_y = actual_y + res_y
-            angle = math.atan(1.0 * actual_x / (ME13pinR + actual_y))
-            angle_track = math.atan(1.0 * track_x / (ME13pinR + track_y))
-            angle_ytrack = math.atan(1.0 * actual_x / (ME13pinR + track_y))
-            rphi_track = (ME13pinR)*math.atan(track_x / (ME13pinR + actual_y))
-            rphi_ytrack = (ME13pinR)*math.atan(track_x / (ME13pinR + track_y))
-            
-            if(doBoxCuts):
-                # MC removes box
-                if(actual_x > 18.0 and (20.0 < actual_y < 65.0)): 
-                    skipTrack = True
-                    break
-
-            if(doBoxFidCuts):
-                # data
-                #if(rphi_track > 14 and (20.0 < track_y < 65.0)): continue
-
-                # MC removes box
-                # if(actual_x > 18.0 and (20.0 < actual_y < 65.0)):
-                #     skipTrack = True
-                #     break
-                # MC removes fiducial tracks around box
-                if(rphi_track > 12 and (20.0 < track_y < 63.0)):
-                # if(rphi_track < -14 and (20.0 < track_y < 63.0)):
-                    skipTrack = True
-                    break
 
 
-            if(doEdgeCuts):
-                # for ch 17, this makes data look good (x offset)
-                #if(abs(rphi_track) > 16): continue
-                if(abs(rphi_track) > 30):
-                    skipTrack = True
-                    break
-
-        # if fiducial loop deemed this a bad track, skip it
-        if(skipTrack): continue
-
-        
         for i in range(NUMLAYERS):
         
-            actual_x, actual_y = muon.hit_x[i], muon.hit_y[i]
-            res_x, res_y = muon.res_x[i], muon.res_y[i]
+            layStr = "muon.lay%i_" % (i+1)
+          
+
+            try:
+                actual_x, actual_y = muon.hit_x[i], muon.hit_y[i]
+                res_x, res_y = muon.res_x[i], muon.res_y[i]
+            except:
+                actual_x, actual_y = eval(layStr+"x"), eval(layStr+"y")
+                res_x, res_y = eval(layStr+"res_x"), eval(layStr+"res_y")
+
+            # propagated track = actual + residual
             track_x = actual_x + res_x
             track_y = actual_y + res_y
-            angle = math.atan(1.0 * actual_x / (ME13pinR + actual_y))
 
             if( actual_x < -998.0 or actual_y < -998.0): continue
             if( res_x < -998.0 or res_y < -998.0): continue
             
-            
             angle = math.atan(1.0 * actual_x / (ME13pinR + actual_y))
             angle_track = math.atan(1.0 * track_x / (ME13pinR + track_y))
             angle_ytrack = math.atan(1.0 * actual_x / (ME13pinR + track_y))
@@ -317,7 +245,6 @@ for idx, muon in enumerate(tt):
             rphi_track = (ME13pinR)*math.atan(track_x / (ME13pinR + actual_y))
             rphi_ytrack = (ME13pinR)*math.atan(track_x / (ME13pinR + track_y))
 
-            # TODO we're using rphi residuals now
             res_rphi = math.cos(angle)*res_x + math.sin(angle)*res_y
 
         
@@ -325,9 +252,9 @@ for idx, muon in enumerate(tt):
                 h1D_actual_localy.Fill(actual_y)
                 h1D_tracks_localy.Fill(track_y)
             
-            sumx += res_x
-            sumr += rProjection(track_y, angle_track)
-            sumxcnt += 1
+            #sumx += res_x
+            #sumr += rProjection(track_y, angle_track)
+            #sumxcnt += 1
 
             h1D_actual_angle.Fill(angle)
             h1D_tracks_angle.Fill(angle_track)
@@ -349,39 +276,33 @@ for idx, muon in enumerate(tt):
                 h2D_nTracker_hit.Fill(actual_x, actual_y, muon.nTracker)
             except: pass
 
-            #h1D_res_x_rproj[i].Fill(rProjection(track_y, angle_track), res_x)
             h1D_res_x_rproj[i].Fill(actual_y, res_x)
 
-            #h1D_res_x_rproj[i].Fill(actual_y, res_x)
-            #h1D_res_x_rproj[i].Fill(rProjection(actual_y, angle), res_x)
-            
-            #h1D_res_x_xproj[i].Fill(actual_x, res_x)
-            #h1D_res_x_rphiproj[i].Fill((rProjection(track_y, angle_ytrack)+ME13pinR)*angle_ytrack, res_x)
-
             h1D_res_x_rphiproj[i].Fill(rphi_track, res_x)
-            #h1D_res_x_rphiproj[i].Fill(track_x, res_x)
-            #h1D_res_x_rphiproj[i].Fill(angle_track, res_x)
+            #h1D_res_x_rphiproj[i].Fill(rphi_ytrack, res_x)
 
             h1D_res_rphi_yproj[i].Fill(actual_y, res_rphi)
        
-        if(sumxcnt > 0):
-            avgres_x = sumx / sumxcnt
+        # if(sumxcnt > 0):
+            
+            # TODO make this into a linear fit and evaluate at layer 3.5
+            #avgres_x = sumx / sumxcnt 
+            #h1D_res_x_avg.Fill(avgres_x)
 
-            #if(abs(avgres_x - meanresx) < nSigma*sigmaresx):
-            avgr = sumr / sumxcnt
-            h1D_res_x_avg.Fill(avgres_x)
-            h1D_res_x_rproj_avg.Fill(avgr, avgres_x)
+            #avgr = sumr / sumxcnt
+            #h1D_res_x_rproj_avg.Fill(avgr, avgres_x)
             
 
-print ">>> analyzed %i positive muons and %i negative muons" % (nPosMu, nNegMu)
 
-
+c1.SetBorderSize(6)
+if(isMC):
+    c1.SetHighLightColor(r.kBlue)
+else:
+    c1.SetHighLightColor(r.kRed)
 c1.SetRightMargin(0.32);
-
 c1.SetGridx()
 c1.SetGridy()
 
-prefix = filename.replace(".root",specialSuffix+"_plots/")
 
 os.system("mkdir " + prefix)
 os.system("cp -pv" + " indexbase.php " + prefix+"_index.php") #
@@ -401,54 +322,47 @@ for i in range(NUMLAYERS):
     
     if(i == 0):
         r.gStyle.SetOptFit(1)
-        setAxisTitles(h1D_res_x_avg, "cm", "counts")
-        h1D_res_x_avg.Draw()
-        fitCut(h1D_res_x_avg, nSigma, "QC")
-        c1.SaveAs(prefix + "h1D_res_x_avg" + suffix)
+        #setAxisTitles(h1D_res_x_avg, "cm", "counts")
+        #h1D_res_x_avg.Draw()
+        #fitCut(h1D_res_x_avg, nSigma, "QC")
+        #c1.SaveAs(prefix + "h1D_res_x_avg" + suffix)
         
-        setAxisTitles(h1D_res_x_rproj_avg, "cm", "cm")
-        h1D_res_x_rproj_avg.GetYaxis().SetRangeUser(-1.4, 1.4)
-        h1D_res_x_rproj_avg.Draw("E0")
-        h1D_res_x_rproj_avg.Fit("pol1","QC")
-        c1.SaveAs(prefix + "h1D_res_x_rproj_avg" + suffix)
+        #setAxisTitles(h1D_res_x_rproj_avg, "cm", "cm")
+        #h1D_res_x_rproj_avg.GetYaxis().SetRangeUser(-1.4, 1.4)
+        #h1D_res_x_rproj_avg.Draw("E0")
+        #h1D_res_x_rproj_avg.Fit("pol1","QC")
+        #c1.SaveAs(prefix + "h1D_res_x_rproj_avg" + suffix)
        
         r.gStyle.SetOptFit(0)
         
-        setAxisTitles(h1D_actual_angle, "phi", "counts")
         h1D_actual_angle.Draw()
-        c1.SaveAs(prefix + "h1D_actual_angle" + suffix)
+        c1.SaveAs(prefix + "h1D_angle_actual" + suffix)
 
-        setAxisTitles(h1D_tracks_angle, "phi", "counts")
         h1D_tracks_angle.Draw()
-        c1.SaveAs(prefix + "h1D_tracks_angle" + suffix)
+        c1.SaveAs(prefix + "h1D_angle_tracks" + suffix)
 
 
-        setAxisTitles(h1D_actual_localy, "cm", "counts")
         h1D_actual_localy.Draw()
-        c1.SaveAs(prefix + "h1D_actual_localy" + suffix)
+        c1.SaveAs(prefix + "h1D_localy_actual" + suffix)
 
-        setAxisTitles(h1D_tracks_localy, "cm", "counts")
         h1D_tracks_localy.Draw()
-        c1.SaveAs(prefix + "h1D_tracks_localy" + suffix)
+        c1.SaveAs(prefix + "h1D_loclay_tracks" + suffix)
 
         
         h2D_nlayers_hit.Draw("colz")
         c1.SaveAs(prefix + "h2D_nlayers_hit" + suffix)
 
+        h2D_nDT_hit.GetZaxis().SetRangeUser(0, 4)
         h2D_nDT_hit.Draw("colz")
         c1.SaveAs(prefix + "h2D_nDT_hit" + suffix)
 
+        h2D_nCSC_hit.GetZaxis().SetRangeUser(0, 4)
         h2D_nCSC_hit.Draw("colz")
         c1.SaveAs(prefix + "h2D_nCSC_hit" + suffix)
 
+        h2D_nTracker_hit.GetZaxis().SetRangeUser(0, 21)
         h2D_nTracker_hit.Draw("colz")
         c1.SaveAs(prefix + "h2D_nTracker_hit" + suffix)
-
-        # h1D_eta_before.Draw()
-        # c1.SaveAs(prefix + "h1D_eta_before" + suffix)
-
-        # h1D_eta_after.Draw()
-        # c1.SaveAs(prefix + "h1D_eta_after" + suffix)
 
 
 
@@ -502,7 +416,7 @@ for i in range(NUMLAYERS):
 
     r.gStyle.SetOptFit(1) # display fitting parameters
 
-    setAxisTitles(h1D_res_x_rproj[i], "cm", "cm")
+    #setAxisTitles(h1D_res_x_rproj[i], "cm", "cm")
     h1D_res_x_rproj[i].GetYaxis().SetRangeUser(-1.4, 1.4)
     # h1D_res_x_rproj[i].BuildOptions(0,0,"")
     h1D_res_x_rproj[i].Draw("E0")
@@ -513,31 +427,21 @@ for i in range(NUMLAYERS):
     layerRotationR.append([fitparams[2], fitparams[3]]) #p1, p1error
 
 
-    #setAxisTitles(h1D_res_x_xproj[i], "cm", "cm")
-    #h1D_res_x_xproj[i].GetYaxis().SetRangeUser(-0.2, 0.2)
-    #h1D_res_x_xproj[i].GetXaxis().SetRangeUser(-30.0, 30.0)
-    #h1D_res_x_xproj[i].Draw("E0")
-    #h1D_res_x_xproj[i].Fit("pol1","QC")
-    #c1.SaveAs(prefix + "h1D_res_x_xproj" + suffix)
-
-    setAxisTitles(h1D_res_rphi_yproj[i], "cm", "cm")
+    #setAxisTitles(h1D_res_rphi_yproj[i], "cm", "cm")
     h1D_res_rphi_yproj[i].GetYaxis().SetRangeUser(-2.0, 2.0)
     #h1D_res_rphi_yproj[i].GetXaxis().SetRangeUser(-0.1, 0.1)
     h1D_res_rphi_yproj[i].Draw("E0")
     h1D_res_rphi_yproj[i].Fit("pol1","QC")
     c1.SaveAs(prefix + "h1D_res_rphi_yproj" + suffix)
    
-    setAxisTitles(h1D_res_x_rphiproj[i], "cm", "cm")
+    #setAxisTitles(h1D_res_x_rphiproj[i], "cm", "cm")
     h1D_res_x_rphiproj[i].GetYaxis().SetRangeUser(-2.0, 2.0)
     #h1D_res_x_rphiproj[i].GetXaxis().SetRangeUser(-0.1, 0.1)
     h1D_res_x_rphiproj[i].Draw("E0")
-    h1D_res_x_rphiproj[i].Fit("pol1","QC")
+    h1D_res_x_rphiproj[i].Fit("pol0","QC")
     c1.SaveAs(prefix + "h1D_res_x_rphiproj" + suffix)
-
-    # fitparams = getFitParams(h1D_res_x_rphiproj[i])
-    # layerRotationRphi.append([fitparams[2], fitparams[3]]) #p1, p1error
     
-    setAxisTitles(h1D_res_x[i], "cm", "counts")
+    #setAxisTitles(h1D_res_x[i], "cm", "counts")
     h1D_res_x[i].Draw()
     fitCut(h1D_res_x[i], nSigma, "QC")
     c1.SaveAs(prefix + "h1D_res_x" + suffix)
@@ -554,34 +458,21 @@ for i, val in enumerate(layerRotationR):
     h1D_rot_dxdr_layers.SetBinContent(i+1, 1.0e6*val[0])
     h1D_rot_dxdr_layers.SetBinError(i+1, 1.0e6*val[1])
 
-# for i, val in enumerate(layerRotationRphi):
-    # h1D_rot_dxdrphi_layers.SetBinContent(i+1, 1.0e6*val[0])
-    # h1D_rot_dxdrphi_layers.SetBinError(i+1, 1.0e6*val[1])
-
 for i, val in enumerate(layerTranslation):
     h1D_trans_layers.SetBinContent(i+1, 1.0e4*val[0])
     h1D_trans_layers.SetBinError(i+1, 1.0e4*val[1])
 
 
-setAxisTitles(h1D_rot_dxdr_layers, "layer", "dx/dr (urad)")
+#setAxisTitles(h1D_rot_dxdr_layers, "layer", "dx/dr (urad)")
+h1D_rot_dxdr_layers.GetYaxis().SetRangeUser(-1500, 1500)
 h1D_rot_dxdr_layers.Fit("pol1","QC")
 h1D_rot_dxdr_layers.Draw("E0")
 c1.SaveAs(prefix + "h1D_rot_dxdr_layers" + ".png")
 
-# setAxisTitles(h1D_rot_dxdrphi_layers, "layer", "dx/drphi (urad)")
-# h1D_rot_dxdrphi_layers.Fit("pol1","QC")
-# h1D_rot_dxdrphi_layers.Draw("E0")
-# c1.SaveAs(prefix + "h1D_rot_dxdrphi_layers" + ".png")
-
-setAxisTitles(h1D_trans_layers, "layer", "microns")
+#setAxisTitles(h1D_trans_layers, "layer", "microns")
+h1D_trans_layers.GetYaxis().SetRangeUser(-700,700)
 h1D_trans_layers.Fit("pol1","QC")
 h1D_trans_layers.Draw("E0")
-c1.SaveAs(prefix + "h1D_trans_layers" + ".png")
+c1.SaveAs(prefix + "h1D_res_x_layers" + ".png")
 
 r.gStyle.SetPalette(1)
-
-# setAxisTitles(h2D_res_x_ntracker, "hits", "cm")
-# h2D_res_x_ntracker.Draw("colz")
-# c1.SaveAs(prefix + "h2D_res_x_ntracker" + ".png")
-
-
