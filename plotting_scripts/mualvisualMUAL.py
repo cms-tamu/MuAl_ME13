@@ -132,10 +132,10 @@ h1D_res_x = []
 h2D_statsig_tracks = []
 
 #h1D_res_x_avg = r.TH1F("h1D_res_x_avg", "avg x residuals", 100,-8.0,8.0) 
-h1D_actual_localy = r.TH1F("h1D_actual_localy", typePrefix+"distribution of actual y hits;cm;counts",  nYbins,-75,75)
-h1D_tracks_localy = r.TH1F("h1D_tracks_localy", typePrefix+"distribution of track y positions;cm;counts",  nYbins,-75,75)
-h1D_actual_angle = r.TH1F("h1D_actual_angle", typePrefix+"angular distribution of hits;phi;counts",  nYbins,-0.08,0.08)
-h1D_tracks_angle = r.TH1F("h1D_tracks_angle", typePrefix+"angular distribution of tracks;phi;counts",  nYbins,-0.08,0.08)
+h1D_actual_localy = r.TH1F("h1D_actual_localy", typePrefix+"distribution of actual y hits (on L3);cm;counts",  nYbins,-90,90)
+h1D_tracks_localy = r.TH1F("h1D_tracks_localy", typePrefix+"distribution of track y positions (on L3);cm;counts",  nYbins,-90,90)
+h1D_actual_angle = r.TH1F("h1D_actual_angle", typePrefix+"angular distribution of hits (on L3);phi;counts",  nYbins,-0.08,0.08)
+h1D_tracks_angle = r.TH1F("h1D_tracks_angle", typePrefix+"angular distribution of tracks (on L3);phi;counts",  nYbins,-0.08,0.08)
 h1D_rot_dxdr_layers = r.TH1F("h1D_rot_dxdr_layers", typePrefix+"phiz (dx/dr) vs layer;layer;dx/dr (urad)",  6,0.5,6.5  )
 h1D_trans_layers = r.TH1F("h1D_trans_layers", typePrefix+"x offset vs layer;layer; x offset (microns)",  6,0.5,6.5  )
 h2D_nlayers_hit = r.TProfile2D("h2D_nlayers_hit", typePrefix+"num layers hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
@@ -144,7 +144,7 @@ h2D_nCSC_hit = r.TProfile2D("h2D_nCSC_hit", typePrefix+"num CSCs hit;actual hit 
 h2D_nTracker_hit = r.TProfile2D("h2D_nTracker_hit", typePrefix+"num tracker hits;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
 
 for i in range(NUMLAYERS):
-    laypfx = " L" + str(i+1) + " "
+    laypfx = " #font[2]{L" + str(i+1) + "} "
     print ">>> Booking histos for layer",i+1
     h2D_cnt_actual.append(  r.TH2F(laypfx + "h2D_cnt_actual", typePrefix+laypfx + "actual hit locations;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
     h2D_cnt_tracks.append(  r.TH2F(laypfx + "h2D_cnt_tracks", typePrefix+laypfx + "track locations;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
@@ -242,8 +242,7 @@ for idx, muon in enumerate(tt):
             angle_track = math.atan(1.0 * track_x / (ME13pinR + track_y))
             angle_ytrack = math.atan(1.0 * actual_x / (ME13pinR + track_y))
 
-            rphi_track = (ME13pinR)*math.atan(track_x / (ME13pinR + actual_y))
-            rphi_ytrack = (ME13pinR)*math.atan(track_x / (ME13pinR + track_y))
+            rphi_track = (ME13pinR)*math.atan(track_x / (ME13pinR + track_y))
 
             res_rphi = math.cos(angle)*res_x + math.sin(angle)*res_y
 
@@ -276,7 +275,7 @@ for idx, muon in enumerate(tt):
                 h2D_nTracker_hit.Fill(actual_x, actual_y, muon.nTracker)
             except: pass
 
-            h1D_res_x_rproj[i].Fill(actual_y, res_x)
+            h1D_res_x_rproj[i].Fill(rProjection(actual_y,angle), res_x)
 
             h1D_res_x_rphiproj[i].Fill(rphi_track, res_x)
             #h1D_res_x_rphiproj[i].Fill(rphi_ytrack, res_x)
@@ -293,12 +292,6 @@ for idx, muon in enumerate(tt):
             #h1D_res_x_rproj_avg.Fill(avgr, avgres_x)
             
 
-
-c1.SetBorderSize(6)
-if(isMC):
-    c1.SetHighLightColor(r.kBlue)
-else:
-    c1.SetHighLightColor(r.kRed)
 c1.SetRightMargin(0.32);
 c1.SetGridx()
 c1.SetGridy()
@@ -438,7 +431,7 @@ for i in range(NUMLAYERS):
     h1D_res_x_rphiproj[i].GetYaxis().SetRangeUser(-2.0, 2.0)
     #h1D_res_x_rphiproj[i].GetXaxis().SetRangeUser(-0.1, 0.1)
     h1D_res_x_rphiproj[i].Draw("E0")
-    h1D_res_x_rphiproj[i].Fit("pol0","QC")
+    h1D_res_x_rphiproj[i].Fit("pol0","QCWW")
     c1.SaveAs(prefix + "h1D_res_x_rphiproj" + suffix)
     
     #setAxisTitles(h1D_res_x[i], "cm", "counts")
