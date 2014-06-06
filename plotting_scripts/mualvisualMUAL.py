@@ -427,11 +427,15 @@ for i in range(NUMLAYERS):
     h1D_res_rphi_yproj[i].Fit("pol1","QC")
     c1.SaveAs(prefix + "h1D_res_rphi_yproj" + suffix)
    
-    #setAxisTitles(h1D_res_x_rphiproj[i], "cm", "cm")
     h1D_res_x_rphiproj[i].GetYaxis().SetRangeUser(-2.0, 2.0)
-    #h1D_res_x_rphiproj[i].GetXaxis().SetRangeUser(-0.1, 0.1)
+    # draw horizontal line at mean_y value for the tprofile
+    f1 = r.TF1("f1",str(h1D_res_x_rphiproj[i].GetMean(2)),h1D_res_x_rphiproj[i].GetXaxis().GetXmin(),h1D_res_x_rphiproj[i].GetXaxis().GetXmax())
+    leg = r.TLegend(0.70,0.15,0.95,0.30)
+    leg.AddEntry(f1,"Mean y = %.5f" % h1D_res_x_rphiproj[i].GetMean(2),"l")
     h1D_res_x_rphiproj[i].Draw("E0")
-    h1D_res_x_rphiproj[i].Fit("pol0","QCWW")
+    leg.Draw("same")
+    f1.Draw("same")
+    #h1D_res_x_rphiproj[i].Fit("pol0","QCWW")
     c1.SaveAs(prefix + "h1D_res_x_rphiproj" + suffix)
     
     #setAxisTitles(h1D_res_x[i], "cm", "counts")
