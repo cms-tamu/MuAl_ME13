@@ -5,6 +5,9 @@ from array import array
 selectedCSC = (1, 2, 2, 1)  # endcap (p-1 m-0), station, wheel, chamber
 specialSuffix = ""
 
+# suppress "Info in..." messages, as there will be a lot
+r.gErrorIgnoreLevel = r.kWarning
+
 
 doChargeCut = (specialSuffix is "_POSMU" or specialSuffix is "_NEGMU")
 chargeToConsider = 1 if specialSuffix is "_POSMU" else -1
@@ -66,6 +69,20 @@ def getFitParams(hist):
     
     return p0, p0e, p1, p1e
 
+def evalInCenter(hist):
+    fit = hist.GetFunction("pol1")
+    p0 = fit.GetParameter(0) # offset from x axis
+    p0e = fit.GetParError(0) # offset from x axis
+    p1 = fit.GetParameter(1) # slope
+    p1e = fit.GetParError(1) # slope
+
+    # evaluate at layer 3.5
+    val = p0+3.5*p1
+    err = math.sqrt(p0e**2 + 3.5**2 * p1e**2)
+    
+    return val, err
+
+
 def getFitParamsGauss(hist):
     fit = hist.GetFunction("gaus")
     
@@ -77,6 +94,13 @@ def getFitParamsGauss(hist):
     
     #print p0, p0e, p1, p1e
     return p0, p0e, p1, p1e
+
+def fixFlooredBins(hist,minZ=-3.5):
+    for x in range(hist.GetNbinsX()+1):
+        for y in range(hist.GetNbinsY()+1):
+            mu = hist.GetBinContent(x,y)
+            if(mu <= minZ):
+                hist.SetBinContent(x,y,minZ)
 
 def binData(indexPt, Nbins, minPt):
     d = {}
@@ -132,7 +156,7 @@ h1D_res_x = []
 h2D_statsig_tracks = []
 
 #h1D_res_x_avg = r.TH1F("h1D_res_x_avg", "avg x residuals", 100,-8.0,8.0) 
-h1D_actual_localy = r.TH1F("h1D_actual_localy", typePrefix+"distribution of actual y hits (on L3);cm;counts",  nYbins,-90,90)
+h1D_actual_localy = r.TH1F("h1D_actual_localy", typePrefix+"distribution of actual y hits (on L3);cm;counts",  48*2,-90,90)
 h1D_tracks_localy = r.TH1F("h1D_tracks_localy", typePrefix+"distribution of track y positions (on L3);cm;counts",  nYbins,-90,90)
 h1D_actual_angle = r.TH1F("h1D_actual_angle", typePrefix+"angular distribution of hits (on L3);phi;counts",  nYbins,-0.08,0.08)
 h1D_tracks_angle = r.TH1F("h1D_tracks_angle", typePrefix+"angular distribution of tracks (on L3);phi;counts",  nYbins,-0.08,0.08)
@@ -204,7 +228,7 @@ for e in goodIndices: goodMuons[e] = 1
 count = 0
 for idx, muon in enumerate(tt):
     count += 1
-    if(count % 10000 == 0): print count 
+    if(count % 2000 == 0): print ">>>",count 
 
     # if(count > 5000): break
     if(not muon.select or muon.nlayers < 6): continue
@@ -221,13 +245,13 @@ for idx, muon in enumerate(tt):
 
         for i in range(NUMLAYERS):
         
-            layStr = "muon.lay%i_" % (i+1)
           
 
             try:
                 actual_x, actual_y = muon.hit_x[i], muon.hit_y[i]
                 res_x, res_y = muon.res_x[i], muon.res_y[i]
             except:
+                layStr = "muon.lay%i_" % (i+1)
                 actual_x, actual_y = eval(layStr+"x"), eval(layStr+"y")
                 res_x, res_y = eval(layStr+"res_x"), eval(layStr+"res_y")
 
@@ -297,8 +321,8 @@ c1.SetGridx()
 c1.SetGridy()
 
 
-os.system("mkdir " + prefix)
-os.system("cp -pv" + " indexbase.php " + prefix+"_index.php") #
+os.system("mkdir -p " + prefix)
+os.system("cp -p " + " indexbase.php " + prefix+"_index.php") #
 
 r.gStyle.SetOptStat("sirmen") # add skewness 
 
@@ -392,11 +416,14 @@ for i in range(NUMLAYERS):
 
     r.TColor.CreateGradientColorTable(len(levels), levels, array('d', red), array('d', green), array('d', blue), ncontours)
     r.gStyle.SetNumberContours(ncontours)
+
     h2D_res_x_actual[i].GetZaxis().SetRangeUser(-3.5, 3.5)
+    fixFlooredBins(h2D_res_x_actual[i], minZ=-3.5)
     h2D_res_x_actual[i].Draw("colz")
     c1.SaveAs(prefix + "h2D_res_x_actual" + suffix)
 
     h2D_res_x_tracks[i].GetZaxis().SetRangeUser(-3.5, 3.5)
+    fixFlooredBins(h2D_res_x_tracks[i], minZ=-3.5)
     h2D_res_x_tracks[i].Draw("colz")
     c1.SaveAs(prefix + "h2D_res_x_tracks" + suffix)
 
@@ -443,9 +470,10 @@ for i in range(NUMLAYERS):
     fitCut(h1D_res_x[i], nSigma, "QC")
     c1.SaveAs(prefix + "h1D_res_x" + suffix)
 
-    mu = h1D_res_x[i].GetMean()
-    muerr = h1D_res_x[i].GetMeanError()
-    print ">>> Unfitted mean x residual for layer %i: %f +/- %f" % (i, mu, muerr)
+    # mu = h1D_res_x[i].GetMean()
+    # muerr = h1D_res_x[i].GetMeanError()
+    # print ">>> Unfitted mean x residual for layer %i: %f +/- %f" % (i, mu, muerr)
+    print ">>> Saved plots for layer %d" % (i+1)
 
     fitparamsGauss = getFitParamsGauss(h1D_res_x[i])
     layerTranslation.append([fitparamsGauss[2], fitparamsGauss[3]]) #mean,meanerror
@@ -464,12 +492,22 @@ for i, val in enumerate(layerTranslation):
 h1D_rot_dxdr_layers.GetYaxis().SetRangeUser(-1500, 1500)
 h1D_rot_dxdr_layers.Fit("pol1","QC")
 h1D_rot_dxdr_layers.Draw("E0")
+centerValue = evalInCenter(h1D_rot_dxdr_layers)
+print ">>> Rotation on layer 3.5: %.1f +/- %.1f urad" % centerValue
+leg = r.TLegend(0.70,0.15,0.98,0.30)
+leg.AddEntry(h1D_rot_dxdr_layers.GetFunction("pol1"),"#scale[2.0]{L3.5 fit = %.0f #pm%.0f #murad}" % centerValue,"l")
+leg.Draw("same")
 c1.SaveAs(prefix + "h1D_rot_dxdr_layers" + ".png")
 
 #setAxisTitles(h1D_trans_layers, "layer", "microns")
 h1D_trans_layers.GetYaxis().SetRangeUser(-700,700)
 h1D_trans_layers.Fit("pol1","QC")
 h1D_trans_layers.Draw("E0")
+centerValue = evalInCenter(h1D_trans_layers)
+print ">>> X offset on layer 3.5: %.1f +/- %.1f urad" % centerValue
+leg = r.TLegend(0.70,0.15,0.98,0.30)
+leg.AddEntry(h1D_trans_layers.GetFunction("pol1"),"#scale[2.0]{L3.5 fit = %.0f#pm%.0f #mum}" % centerValue,"l")
+leg.Draw("same")
 c1.SaveAs(prefix + "h1D_res_x_layers" + ".png")
 
 r.gStyle.SetPalette(1)
