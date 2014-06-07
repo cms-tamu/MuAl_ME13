@@ -389,11 +389,11 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
               layerData->nlayers = nLayers;
               //layerData->nDT = dtHits;
               //dtHits = 0;
+              if(layerData->doFill) layerTree->Fill();  
 
             } else { /*(*layerData).select = false;*/ }
           }
           
-          if(layerData->doFill) layerTree->Fill();  
             
           } else if ( hitId2.subdetId() == MuonSubdetId::RPC ) {
             std::cout << "Muon Hit in RPC" << std::endl;
