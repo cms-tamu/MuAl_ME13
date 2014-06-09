@@ -666,7 +666,7 @@ cp -f %(validationLabel)s_${timestamp}.tgz $ALIGNMENT_AFSDIR/
 
 # layer plots
 if [ $ALIGNMENT_LAYERPLOTS == \"True\" ]; then
-  python layerPlots.py $ALIGNMENT_CAFDIR/files/%(director1)s_plotting.root
+  python layerPlots.py $ALIGNMENT_CAFDIR/files/%(director1)s_plotting.root %(minNCrossedChambers)s
   tar czf %(validationLabel)s_${timestamp}_layer_plots.tgz layer_plots
   cp -f %(validationLabel)s_${timestamp}_layer_plots.tgz $ALIGNMENT_AFSDIR/
 fi  
