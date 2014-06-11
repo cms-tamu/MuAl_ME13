@@ -123,6 +123,11 @@ def getGoodMuonIndices(posIndexPt, negIndexPt, Nbins, minPt):
         #print bin, len(dP[bin]), len(dN[bin]), minMuonsInBin #, d[bin]
     return indicesToConsider
 
+def applyRotation(x,y,phiz):
+    xp = math.cos(phiz)*x - math.sin(phiz)*y
+    yp = math.sin(phiz)*x + math.cos(phiz)*y
+    return xp,yp
+
 c1 = r.TCanvas("Canvas1", "Alignment Visualizations")
 
 typePrefix = "ME%s%d/%d/%d" % ("+" if selectedCSC[0] == 1 else "-", selectedCSC[1], selectedCSC[2], selectedCSC[3])
@@ -159,6 +164,9 @@ h2D_nlayers_hit = r.TProfile2D("h2D_nlayers_hit", typePrefix+"num layers hit;act
 h2D_nDT_hit = r.TProfile2D("h2D_nDT_hit", typePrefix+"num DTs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
 h2D_nCSC_hit = r.TProfile2D("h2D_nCSC_hit", typePrefix+"num CSCs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
 h2D_nTracker_hit = r.TProfile2D("h2D_nTracker_hit", typePrefix+"num tracker hits;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
+h1D_pt = r.TH1F("h1D_pt", typePrefix+"p_T;p_T (GeV/c);counts",  100, 20, 210)
+h1D_pz = r.TH1F("h1D_pz", typePrefix+"p_z;p_z (GeV/c);counts",  100, 20, 210)
+
 
 for i in range(NUMLAYERS):
     laypfx = " #font[2]{L" + str(i+1) + "} "
@@ -237,6 +245,9 @@ for idx, muon in enumerate(tt):
 
         if(goodMuons[idx] != 1): continue
 
+        h1D_pt.Fill(muon.pt)
+        h1D_pz.Fill(muon.pz)
+
         for i in range(NUMLAYERS):
             try:
                 actual_x, actual_y = muon.hit_x[i], muon.hit_y[i]
@@ -246,9 +257,21 @@ for idx, muon in enumerate(tt):
                 actual_x, actual_y = eval(layStr+"x"), eval(layStr+"y")
                 res_x, res_y = eval(layStr+"res_x"), eval(layStr+"res_y")
 
+
             # propagated track = actual + residual
             track_x = actual_x + res_x
             track_y = actual_y + res_y
+
+            # do translations or rotations
+
+            #actual_x, actual_y = 0.99*actual_x, 0.99*actual_y # make chamber 1% smaller wrt to x,y=0,0
+            #actual_x, actual_y = actual_x, actual_y+0.30 # shift y up by 3 mm
+            #actual_x, actual_y = applyRotation(actual_x, actual_y, 0.001) # rotate CCW by 1 mrad
+            #actual_x, actual_y = actual_x + 0.03, actual_y # shift x up by 300 microns
+            # recalculate residuals
+            #res_x, res_y = track_x - actual_x, track_y - actual_y
+
+            ######
 
             angle = math.atan(1.0 * actual_x / (ME13pinR + actual_y))
             angle_track = math.atan(1.0 * track_x / (ME13pinR + track_y))
@@ -304,7 +327,12 @@ for i in range(NUMLAYERS):
     suffix = "_LAY" + str(i+1) + ".png"
     
     if(i == 0):
+        h1D_pt.Draw()
+        c1.SaveAs(prefix + "h1D_pt" + suffix)
         
+        h1D_pz.Draw()
+        c1.SaveAs(prefix + "h1D_pz" + suffix)
+
         h1D_actual_angle.Draw()
         c1.SaveAs(prefix + "h1D_angle_actual" + suffix)
 
@@ -450,6 +478,7 @@ h1D_rot_dxdr_layers.GetYaxis().SetRangeUser(-1500, 1500)
 h1D_rot_dxdr_layers.Fit("pol1","QC")
 h1D_rot_dxdr_layers.Draw("E0")
 centerValue = evalInCenter(h1D_rot_dxdr_layers)
+b = centerValue
 print ">>> Rotation on layer 3.5: %.1f +/- %.1f urad" % centerValue
 leg = r.TLegend(0.70,0.15,0.98,0.30)
 leg.AddEntry(h1D_rot_dxdr_layers.GetFunction("pol1"),"#scale[2.0]{L3.5 fit = %.0f #pm%.0f #murad}" % centerValue,"l")
@@ -460,10 +489,15 @@ h1D_trans_layers.GetYaxis().SetRangeUser(-700,700)
 h1D_trans_layers.Fit("pol1","QC")
 h1D_trans_layers.Draw("E0")
 centerValue = evalInCenter(h1D_trans_layers)
+a = centerValue
 print ">>> X offset on layer 3.5: %.1f +/- %.1f microns" % centerValue
 leg = r.TLegend(0.70,0.15,0.98,0.30)
 leg.AddEntry(h1D_trans_layers.GetFunction("pol1"),"#scale[2.0]{L3.5 fit = %.0f#pm%.0f #mum}" % centerValue,"l")
 leg.Draw("same")
 c1.SaveAs(prefix + "h1D_res_x_layers" + ".png")
+
+# make it easier to extract various results/parameters from script running by grepping for DBG
+# chamber#, specialsuffix, mc/data, nMuons, xoffset_layer3.5, xoffset_layer3.5error, phiz_layer3.5, phiz_layer3.5error
+print "DBG %d %s %s %d %.6f %.6f %.6f %.6f" % (selectedCSC[-1], specialSuffix, "MC" if isMC else "DATA", nMuonsToConsider, a[0]*10**(-4), a[1]*10**(-4), b[0]*10**(-6), b[1]*10**(-6))
 
 r.gStyle.SetPalette(1)

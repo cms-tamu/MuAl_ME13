@@ -205,6 +205,8 @@ def makePlotsCSC(chamberKey):
 
     typePrefix = "#font[2]{%s} " % prettyStr
 
+    h1D_pt = r.TH1F("h1D_pt", typePrefix+"p_T;p_T (GeV/c);counts",  100, 20, 210)
+    h1D_pz = r.TH1F("h1D_pz", typePrefix+"p_z;p_z (GeV/c);counts",  100, 20, 210)
     h1D_actual_localy = r.TH1F("h1D_actual_localy", typePrefix+"distribution of actual y hits (on L3);cm;counts",  2*nYbins,-YMax,YMax)
     h1D_tracks_localy = r.TH1F("h1D_tracks_localy", typePrefix+"distribution of track y positions (on L3);cm;counts",  nYbins,-YMax,YMax)
     h1D_actual_angle = r.TH1F("h1D_actual_angle", typePrefix+"angular distribution of hits (on L3);phi;counts",  nYbins,-0.15,0.15)
@@ -253,6 +255,9 @@ def makePlotsCSC(chamberKey):
 
             
         if(idx not in goodMuons): continue
+
+        h1D_pt.Fill(muon.pt)
+        h1D_pz.Fill(muon.pz)
         
         for i in range(6):
 
@@ -323,6 +328,11 @@ def makePlotsCSC(chamberKey):
         suffix = "_LAY" + str(i+1) + ".png"     
 
         if(i == 0):
+            h1D_pt.Draw()
+            c1.SaveAs(prefix + "h1D_pt" + suffix)
+            
+            h1D_pz.Draw()
+            c1.SaveAs(prefix + "h1D_pz" + suffix)
             
             h1D_actual_angle.Draw()
             c1.SaveAs(prefix + "h1D_angle_actual" + suffix)
