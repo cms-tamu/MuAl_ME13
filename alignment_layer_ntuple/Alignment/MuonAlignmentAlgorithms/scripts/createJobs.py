@@ -123,6 +123,11 @@ parser.add_option("--cscparams",
                   type="string",
                   default="100011",
                   dest="cscparams")
+parser.add_option("--cutTypes",
+                  help="cut types",
+                  type="string",
+                  default="",
+                  dest="cutTypes")
 parser.add_option("--minTrackPt",
                   help="minimum allowed track transverse momentum (in GeV)",
                   type="string",
@@ -303,6 +308,7 @@ isMC = str(options.isMC)
 station123params = options.station123params
 station4params = options.station4params
 cscparams = options.cscparams
+cutTypes = options.cutTypes
 muonCollectionTag = options.muonCollectionTag
 minTrackPt = options.minTrackPt
 maxTrackPt = options.maxTrackPt
@@ -413,6 +419,7 @@ export ALIGNMENT_ISMC=%(isMC)s
 export ALIGNMENT_STATION123PARAMS=%(station123params)s
 export ALIGNMENT_STATION4PARAMS=%(station4params)s
 export ALIGNMENT_CSCPARAMS=%(cscparams)s
+export ALIGNMENT_CUTTYPES=%(cutTypes)s
 export ALIGNMENT_MUONCOLLECTIONTAG=%(muonCollectionTag)s
 export ALIGNMENT_MINTRACKPT=%(minTrackPt)s
 export ALIGNMENT_MAXTRACKPT=%(maxTrackPt)s
@@ -478,6 +485,7 @@ export ALIGNMENT_ISMC=%(isMC)s
 export ALIGNMENT_STATION123PARAMS=%(station123params)s
 export ALIGNMENT_STATION4PARAMS=%(station4params)s
 export ALIGNMENT_CSCPARAMS=%(cscparams)s
+export ALIGNMENT_CUTTYPES=%(cutTypes)s
 export ALIGNMENT_MINTRACKPT=%(minTrackPt)s
 export ALIGNMENT_MAXTRACKPT=%(maxTrackPt)s
 export ALIGNMENT_MINTRACKP=%(minTrackP)s

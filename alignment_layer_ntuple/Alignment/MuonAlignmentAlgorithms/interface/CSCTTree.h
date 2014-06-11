@@ -28,6 +28,7 @@ typedef struct CSCLayerData {
 
     // not in ttree, but for other purposes
     Bool_t doFill;
+    std::string cutType;
 
     CSCLayerData()
     {
@@ -45,6 +46,7 @@ typedef struct CSCLayerData {
         pz = BADVAL;
         eta = BADVAL;
         doFill = false;
+        cutType = "";
         for(int i = 0; i < 6; i++) {
             v_hitx[i] = BADVAL;
             v_hity[i] = BADVAL;
@@ -68,6 +70,7 @@ typedef struct CSCLayerData {
         pz = x.pz;
         eta = x.eta;
         doFill = x.doFill;
+        cutType = x.cutType;
 
         for(int i = 0; i < 6; i++) {
             v_hitx[i] = x.v_hitx[i];

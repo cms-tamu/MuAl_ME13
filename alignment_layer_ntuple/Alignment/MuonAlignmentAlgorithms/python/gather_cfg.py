@@ -35,6 +35,7 @@ isMC = (os.environ["ALIGNMENT_ISMC"] == "True")
 station123params = os.environ["ALIGNMENT_STATION123PARAMS"]
 station4params = os.environ["ALIGNMENT_STATION4PARAMS"]
 cscparams = os.environ["ALIGNMENT_CSCPARAMS"]
+cutTypes = os.environ["ALIGNMENT_CUTTYPES"]
 minTrackPt = float(os.environ["ALIGNMENT_MINTRACKPT"])
 maxTrackPt = float(os.environ["ALIGNMENT_MAXTRACKPT"])
 minTrackP = float(os.environ["ALIGNMENT_MINTRACKP"])
@@ -190,6 +191,7 @@ process.looper.algoConfig.combineME11 = combineME11
 process.looper.algoConfig.maxResSlopeY = maxResSlopeY
 #process.looper.algoConfig.createNtuple = createAlignNtuple
 process.looper.algoConfig.createLayerNtuple = createLayerNtuple
+process.looper.algoConfig.cutTypes = cutTypes
 process.looper.algoConfig.minDT13Hits = 7
 process.looper.algoConfig.doDT = doDT
 process.looper.algoConfig.doCSC = doCSC

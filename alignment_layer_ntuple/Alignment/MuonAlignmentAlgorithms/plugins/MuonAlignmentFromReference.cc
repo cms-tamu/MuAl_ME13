@@ -322,6 +322,7 @@ private:
   double m_maxResSlopeY;
   bool m_createNtuple;
   bool m_createLayerNtuple;
+  std::string m_cutTypes;
   double m_peakNSigma;
   int m_BFieldCorrection;
   bool m_doDT;
@@ -406,6 +407,7 @@ MuonAlignmentFromReference::MuonAlignmentFromReference(const edm::ParameterSet &
   , m_maxResSlopeY(cfg.getParameter<double>("maxResSlopeY"))
   , m_createNtuple(cfg.getParameter<bool>("createNtuple"))
   , m_createLayerNtuple(cfg.getParameter<bool>("createLayerNtuple"))
+  , m_cutTypes(cfg.getParameter<std::string>("cutTypes"))
   , m_peakNSigma(cfg.getParameter<double>("peakNSigma"))
   , m_BFieldCorrection(cfg.getParameter<int>("bFieldCorrection"))
   , m_doDT(cfg.getParameter<bool>("doDT"))
@@ -670,13 +672,13 @@ void MuonAlignmentFromReference::run(const edm::EventSetup& iSetup, const EventI
   edm::ESHandle<Propagator> prop;
   iSetup.get<TrackingComponentsRecord>().get("SteppingHelixPropagatorAny",prop);
 
+  layerData.cutType = m_cutTypes;
   if (m_muonCollectionTag.label().empty()) // use trajectories
   {
     std::cout << "JUST BEFORE LOOP OVER trajTrackPairs" << std::endl;
     const ConstTrajTrackPairCollection &trajtracks = eventInfo.trajTrackPairs_;
     for (ConstTrajTrackPairCollection::const_iterator trajtrack = trajtracks.begin();  trajtrack != trajtracks.end();  ++trajtrack)
     {
-      //CSCLayerData layerData;
 
       m_counter_tracks++;
 

@@ -65,6 +65,9 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
   layerData->pt = m_recoTrack->pt();
   layerData->charge = m_recoTrack->charge();
 
+  bool isFiducial = false;
+  std::cout << "CUTTYPE is " << layerData->cutType << std::endl;
+
   int iT = 0, iM = 0;
   int iCSC = 0, iDT = 0;
   for (trackingRecHit_iterator hit = m_recoTrack->recHitsBegin(); hit != m_recoTrack->recHitsEnd(); ++hit) {
@@ -102,12 +105,7 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
   layerData->nTracker = iT;
   layerData->nCSC = iCSC;
   layerData->nDT = iDT;
-  
-//  TrackTransformer trackTransformer();
-//  std::vector<Trajectory> vTrackerTrajectory = trackTransformer.transform(track, recHitsForReFit);
-//  std::cout << "Tracker trajectories size " << vTrackerTrajectory.size() << std::endl;
-
-  
+   
   TrajectoryStateOnSurface lastTrackerTsos;
   double lastTrackerTsosGlobalPositionR = 0.0;
   
@@ -181,8 +179,131 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
       }
   }
 
+  isFiducial = false;
+
+
+
+
+
+
+  for (trackingRecHit_iterator hit2 = m_recoTrack->recHitsBegin(); hit2 != m_recoTrack->recHitsEnd(); ++hit2) {
+    if((*hit2)->isValid()) {
+      DetId hitId2  = (*hit2)->geographicalId();
+      if ( hitId2.det() == DetId::Tracker ) {
+      } else if ( hitId2.det() == DetId::Muon ){
+          if ( hitId2.subdetId() == MuonSubdetId::DT ) {
+          } else if ( hitId2.subdetId() == MuonSubdetId::CSC ) {
+            const CSCDetId cscDetId2(hitId2.rawId());
+            const CSCDetId chamberId(cscDetId2.endcap(), cscDetId2.station(), cscDetId2.ring(), cscDetId2.chamber());
+            if ( (*hit2)->dimension() == 4 ) {
+            std::vector<const TrackingRecHit*> vCSCHits2D = (*hit2)->recHits();
+            std::cout << "          vCSCHits2D size: " << vCSCHits2D.size() << std::endl;
+            if ( vCSCHits2D.size() >= 5 ) {
+               
+              for ( std::vector<const TrackingRecHit*>::const_iterator itCSCHits2D =  vCSCHits2D.begin();
+                                                                       itCSCHits2D != vCSCHits2D.end();
+                                                                     ++itCSCHits2D ) {
+                const TrackingRecHit* cscHit2D = *itCSCHits2D;
+                const TrackingRecHit* hit = cscHit2D;
+                DetId hitId  = hit->geographicalId();
+                const CSCDetId cscDetId(hitId.rawId());
+                
+                // not sure why we sometimes get layer == 0
+                if (cscDetId.layer() == 0) continue;
+                
+                if (cscDetId.layer() != 3) continue; // do fiducial selections on layer 3 only
+  
+            	  TrajectoryStateOnSurface extrapolation;
+                extrapolation = prop->propagate( lastTrackerTsos, globalGeometry->idToDet(hitId)->surface() );
+            	  
+            	  if ( extrapolation.isValid() ) {
+            	    std::cout << " extrapolation localPosition()"
+            	              << " x: " << extrapolation.localPosition().x()
+            	              << " y: " << extrapolation.localPosition().y() 
+            	              << " z: " << extrapolation.localPosition().z() << std::endl;
+
+                    double ME13pinR = 595.1500244;
+                    double track_x = extrapolation.localPosition().x();
+                    double track_y = extrapolation.localPosition().y();
+                    double actual_x = hit->localPosition().x();
+                    double actual_y = hit->localPosition().y();
+                    double rphi_track = (ME13pinR)*atan(track_x / (ME13pinR + track_y));
+
+                    std::string cut = layerData->cutType;
+                    // 1. no cuts
+                    // 2. side cuts
+                    if(cut == "SIDE") {
+                        std::cout << "checking side cut" << std::endl;
+                        if ( fabs(rphi_track) > 30.0 ) isFiducial = true; 
+
+                    }
+                    // 3. side, box cuts
+                    if(cut == "SIDEBOX") {
+                        std::cout << "checking sidebox cut" << std::endl;
+                        if ( fabs(rphi_track) > 30.0 ||
+                             (actual_x > 20.0 && actual_y > 20.0 && actual_y < 63.0) ) isFiducial = true; 
+
+                    }
+                    // 4. side, box, box fiducial cuts
+                    if(cut == "SIDEBOXFID") {
+                        std::cout << "checking sideboxfid cut" << std::endl;
+                        if ( fabs(rphi_track) > 30.0 ||
+                             (actual_x > 20.0 && actual_y > 20.0 && actual_y < 63.0) ||
+                             (rphi_track > 12.0 && actual_y > 20.0 && actual_y < 63.0) ) isFiducial = true;
+
+                    }
+                    // 5. box cuts
+                    if(cut == "BOX") {
+                        std::cout << "checking box cut" << std::endl;
+                        if ( actual_x > 20.0 && actual_y > 20.0 && actual_y < 63.0 ) isFiducial = true; 
+
+                    }
+                    // 6. box, box fiducial cuts
+                    if(cut == "BOXFID") {
+                        std::cout << "checking boxfid cut" << std::endl;
+                        if ( (actual_x > 20.0 && actual_y > 20.0 && actual_y < 63.0) ||
+                             (rphi_track > 12.0 && actual_y > 20.0 && actual_y < 63.0) ) isFiducial = true;
+
+                    }
+                    // 7. side, symmetric box, symmetric box fiducial cuts
+                    if(cut == "SIDESYMBOXFID") {
+                        std::cout << "checking sidesymboxfid cut" << std::endl;
+                        if ( fabs(rphi_track) > 30.0 ||
+                             (abs(actual_x) > 20.0 && actual_y > 20.0 && actual_y < 63.0) ||
+                             (abs(rphi_track) > 12.0 && actual_y > 20.0 && actual_y < 63.0) ) isFiducial = true;
+
+                    }
+
+                  }
+              } // end of loop over CSC layers
+                
+
+            } 
+          }
+            
+            
+          } else if ( hitId2.subdetId() == MuonSubdetId::RPC ) {
+          } else {
+          }
+      }
+    }
+  }
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   int iT2 = 0, iM2 = 0;
-  //int trackerHits = 0, cscHits = 0, dtHits = 0; // nja
   for (trackingRecHit_iterator hit2 = m_recoTrack->recHitsBegin(); hit2 != m_recoTrack->recHitsEnd(); ++hit2) {
     if((*hit2)->isValid()) {
       DetId hitId2  = (*hit2)->geographicalId();
@@ -363,7 +484,7 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
                 extrapolation = prop->propagate( lastTrackerTsos, globalGeometry->idToDet(hitId)->surface() );
             	  std::cout << " extrapolation.isValid() = " << extrapolation.isValid() << std::endl;
             	  
-            	  if ( extrapolation.isValid() ) {
+            	  if ( extrapolation.isValid() && !isFiducial ) {
             	    std::cout << " extrapolation localPosition()"
             	              << " x: " << extrapolation.localPosition().x()
             	              << " y: " << extrapolation.localPosition().y() 
@@ -389,7 +510,9 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
               layerData->nlayers = nLayers;
               //layerData->nDT = dtHits;
               //dtHits = 0;
-              if(layerData->doFill) layerTree->Fill();  
+              
+              if(!isFiducial && layerData->doFill)
+                  layerTree->Fill();  
 
             } else { /*(*layerData).select = false;*/ }
           }

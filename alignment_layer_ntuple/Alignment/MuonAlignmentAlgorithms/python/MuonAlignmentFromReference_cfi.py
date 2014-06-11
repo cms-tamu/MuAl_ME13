@@ -44,6 +44,7 @@ MuonAlignmentFromReference = cms.PSet(
     
     createNtuple = cms.bool(False),
     createLayerNtuple = cms.bool(False),
+    cutTypes = cms.string(""),
     
     peakNSigma = cms.double(-1.),
     bFieldCorrection = cms.int32(1),
