@@ -23,11 +23,13 @@ ln -s Alignment/MuonAlignmentAlgorithms/python/gather_cfg.py
 ln -s Alignment/MuonAlignmentAlgorithms/plugins/MuonAlignmentFromReference.cc
 ln -s Alignment/MuonAlignmentAlgorithms/python/align_cfg.py
 ln -s Alignment/MuonAlignmentAlgorithms/src/MuonResidualsFromTrack.cc
+ln -s Alignment/MuonAlignmentAlgorithms/scripts/layerPlots.py
+ln -s Alignment/MuonAlignmentAlgorithms/python/MuonAlignmentFromReference_cfi.py
 ```
 
 Soft links for the `*.cc` files are for convenience, as they are the files (along with their corresponding header files) that I edited for layer information collection. `CSCTTree.h` was created to contain the layer information structure.
 
-`createJobs.py` and `gather_cfg.py` were both modified to allow for easy switching between data and MC alignment using a `--isMC` flag in the `createJobs.py` line (example provided later on).
+`createJobs.py` and `gather_cfg.py` were both modified to allow for easy switching between data and MC alignment using a `--isMC` flag in the `createJobs.py` line (example provided later on). Note: at minimum, `MuonAlignmentFromReference_cfi.py`, `createJobs.py`, `gather_cfg.py`, `MuonAlignmentFromReference.cc` need to be modified when adding another createJobs syntax parameter that gets used within a gather job.
 
 A sample filelist (one file) generated using the singleMuonGun is provided in ` Cert_singleMuonGun_MC_MEp_1_3_17_ABRIDGED_V2.py`.
 `idealGeometry.db` and `inertGlobalPositionRcd.db` are used for MC.
@@ -48,9 +50,9 @@ And, finally, submit via
 . MuonFilter_2012_MEp_1_3_17_MC_TEST.sh
 ```
 
-This will run over 10k events and should take no more than 12 minutes to run.
+This will run over 20k events and should take no more than 15 minutes to run.
 
-Note that the `--isMC` flag was added to accomodate MC inputs. `--createLayerNtuple` collects layer information and places it in the *_plotting.root file inside of the alignment job's directory. `--layerPlots` will take this layer information and produce plots in a tree-like directory structure. Each folder will contain a PHP file allowing for easy viewing of the plots in the directories if they are copied over to a website.
+Note that the `--isMC` flag was added to accomodate MC inputs. `--createLayerNtuple` collects layer information and places it in the *_plotting.root file inside of the alignment job's directory. `--layerPlots` will take this layer information and produce plots in a tree-like directory structure. Each folder will contain a PHP file allowing for easy viewing of the plots in the directories if they are copied over to a website. If a chamber receives less than 200 tracks, it will not be considered for plotting.
 
 In this example, `MuonFilter_2012_MEp_1_3_17_MC_TEST_01/MuonFilter_2012_MEp_1_3_17_MC_TEST_01_plotting.root` will contain a TTree `csc_layer_ttree` with layer information. The .tgz file in the `CMSSW_5_3_6_patch1/src` directory that normally contains the plots will be accompanied by another .tgz file with the layer plots, for example (timestamp will be different),  `MuonFilter_2012_MEp_1_3_17_MC_TEST_20140528235539_layer_plots.tgz`. Doing
 ``` bash

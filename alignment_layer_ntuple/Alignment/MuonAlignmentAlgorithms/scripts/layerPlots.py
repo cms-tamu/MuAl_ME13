@@ -207,6 +207,8 @@ def makePlotsCSC(chamberKey):
 
     h1D_pt = r.TH1F("h1D_pt", typePrefix+"p_T;p_T (GeV/c);counts",  100, 20, 210)
     h1D_pz = r.TH1F("h1D_pz", typePrefix+"p_z;p_z (GeV/c);counts",  100, 20, 210)
+    h1D_p = r.TH1F("h1D_p", typePrefix+"p;p (GeV/c);counts",  100, 20, 210)
+    h1D_eta = r.TH1F("h1D_eta", typePrefix+"eta;eta;counts",  150, -2.4, 2.4)
     h1D_actual_localy = r.TH1F("h1D_actual_localy", typePrefix+"distribution of actual y hits (on L3);cm;counts",  2*nYbins,-YMax,YMax)
     h1D_tracks_localy = r.TH1F("h1D_tracks_localy", typePrefix+"distribution of track y positions (on L3);cm;counts",  nYbins,-YMax,YMax)
     h1D_actual_angle = r.TH1F("h1D_actual_angle", typePrefix+"angular distribution of hits (on L3);phi;counts",  nYbins,-0.15,0.15)
@@ -258,6 +260,8 @@ def makePlotsCSC(chamberKey):
 
         h1D_pt.Fill(muon.pt)
         h1D_pz.Fill(muon.pz)
+        h1D_p.Fill(math.sqrt(muon.pt*muon.pt+muon.pz*muon.pz))
+        h1D_eta.Fill(muon.eta)
         
         for i in range(6):
 
@@ -333,7 +337,13 @@ def makePlotsCSC(chamberKey):
             
             h1D_pz.Draw()
             c1.SaveAs(prefix + "h1D_pz" + suffix)
-            
+
+            h1D_p.Draw()
+            c1.SaveAs(prefix + "h1D_p" + suffix)
+
+            h1D_eta.Draw()
+            c1.SaveAs(prefix + "h1D_eta" + suffix)
+                
             h1D_actual_angle.Draw()
             c1.SaveAs(prefix + "h1D_angle_actual" + suffix)
 
