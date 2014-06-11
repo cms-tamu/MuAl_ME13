@@ -280,8 +280,8 @@ def makePlotsCSC(chamberKey):
                 h1D_actual_localy.Fill(actual_y)
                 h1D_tracks_localy.Fill(track_y)
             
-            h1D_actual_angle.Fill(angle)
-            h1D_tracks_angle.Fill(angle_track)
+                h1D_actual_angle.Fill(angle)
+                h1D_tracks_angle.Fill(angle_track)
 
             h1D_res_x[i].Fill(res_x)
             
