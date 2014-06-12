@@ -178,6 +178,11 @@ def fixFlooredBins(hist,minZ=-3.5):
             if(mu <= minZ):
                 hist.SetBinContent(x,y,minZ)
 
+def zoomXrange(h):
+    nonEmptyBins = [(e,h.GetXaxis().GetBinCenter(e)) for e in range(h.GetNbinsX()) if h.GetBinContent(e)>0] 
+    minX, maxX = min(nonEmptyBins)[1], max(nonEmptyBins)[1]
+    tolerance = (maxX-minX)*0.15
+    h.GetXaxis().SetRangeUser(minX-tolerance,maxX+tolerance)
 
 def makePlotsCSC(chamberKey):
     h2D_cnt_actual = []
@@ -205,8 +210,11 @@ def makePlotsCSC(chamberKey):
 
     typePrefix = "#font[2]{%s} " % prettyStr
 
-    h1D_pt = r.TH1F("h1D_pt", typePrefix+"p_T;p_T (GeV/c);counts",  100, 20, 210)
-    h1D_pz = r.TH1F("h1D_pz", typePrefix+"p_z;p_z (GeV/c);counts",  100, 20, 210)
+    h1D_pt = r.TH1F("h1D_pt", typePrefix+"p_{T};p_{T} (GeV/c);counts",  100, 20, 210)
+    h1D_pz = r.TH1F("h1D_pz", typePrefix+"p_{z};p_{z} (GeV/c);counts",  100, 20, 210)
+    h1D_p = r.TH1F("h1D_p", typePrefix+"p;p (GeV/c);counts",  100, 20, 210)
+    h1D_phi = r.TH1F("h1D_phi", typePrefix+"#phi;#phi;counts",  800, 0, 6.283)
+    h1D_eta = r.TH1F("h1D_eta", typePrefix+"#eta;#eta;counts",  800, -2.2, 2.2)
     h1D_actual_localy = r.TH1F("h1D_actual_localy", typePrefix+"distribution of actual y hits (on L3);cm;counts",  2*nYbins,-YMax,YMax)
     h1D_tracks_localy = r.TH1F("h1D_tracks_localy", typePrefix+"distribution of track y positions (on L3);cm;counts",  nYbins,-YMax,YMax)
     h1D_actual_angle = r.TH1F("h1D_actual_angle", typePrefix+"angular distribution of hits (on L3);phi;counts",  nYbins,-0.15,0.15)
@@ -258,6 +266,11 @@ def makePlotsCSC(chamberKey):
 
         h1D_pt.Fill(muon.pt)
         h1D_pz.Fill(muon.pz)
+        h1D_p.Fill(math.sqrt(muon.pt*muon.pt+muon.pz*muon.pz))
+        h1D_eta.Fill(muon.eta)
+        phi = muon.phi
+        if(muon.phi < 0): phi += 2*3.14159265
+        h1D_phi.Fill(phi)
         
         for i in range(6):
 
@@ -268,6 +281,9 @@ def makePlotsCSC(chamberKey):
                 layStr = "muon.lay%i_" % (i+1)
                 actual_x, actual_y = eval(layStr+"x"), eval(layStr+"y")
                 res_x, res_y = eval(layStr+"res_x"), eval(layStr+"res_y")
+
+            # roughly discard tails
+            if(abs(res_x) > resRange): continue 
 
             track_x = actual_x + res_x
             track_y = actual_y + res_y
@@ -334,6 +350,17 @@ def makePlotsCSC(chamberKey):
             h1D_pz.Draw()
             c1.SaveAs(prefix + "h1D_pz" + suffix)
             
+            h1D_phi.Draw()
+            zoomXrange(h1D_phi)
+            c1.SaveAs(prefix + "h1D_phi" + suffix)
+
+            h1D_p.Draw()
+            c1.SaveAs(prefix + "h1D_p" + suffix)
+
+            zoomXrange(h1D_eta)
+            h1D_eta.Draw()
+            c1.SaveAs(prefix + "h1D_eta" + suffix)
+
             h1D_actual_angle.Draw()
             c1.SaveAs(prefix + "h1D_angle_actual" + suffix)
 
@@ -365,8 +392,8 @@ def makePlotsCSC(chamberKey):
 
 
 
-        for x in range(nXbins):
-            for y in range(nYbins):
+        for x in range(h2D_res_x_tracks[i].GetNbinsX()):
+            for y in range(h2D_res_x_tracks[i].GetNbinsY()):
                 mu = h2D_res_x_tracks[i].GetBinContent(x,y)
                 sig = h2D_res_x_tracks[i].GetBinError(x,y)
                 ibin = h2D_res_x_tracks[i].GetBin(x,y)
@@ -400,8 +427,8 @@ def makePlotsCSC(chamberKey):
         r.gStyle.SetNumberContours(ncontours)
 
         # multiply avg resx by hit occupancy to get "force" of pulling
-        for x in range(nXbins):
-            for y in range(nYbins):
+        for x in range(h2D_pull_tracks[i].GetNbinsX()):
+            for y in range(h2D_pull_tracks[i].GetNbinsY()):
                 ibin = h2D_pull_tracks[i].GetBin(x,y)
                 mu = h2D_pull_tracks[i].GetBinContent(ibin)
                 entries = h2D_pull_tracks[i].GetBinEntries(ibin)
@@ -502,6 +529,7 @@ dChambers = { }
 
 count = 0
 
+t0 = time.time()
 print ">>> Looping through all elements in tree and collecting indices for charge equalization"
 for i,muon in enumerate(tt):
     # if(count > 5000): break
@@ -527,8 +555,9 @@ for i,muon in enumerate(tt):
     else:
         dChambers[chamberKey] = [[i,charge,muon.pz]]
         
-print ">>> Done looping through all elements in tree"
+print ">>> Equalization loop took %.2f seconds" % (time.time() - t0)
 
+t0 = time.time()
 for chamber in dChambers.keys():
     nMuons = equalizeCharges(chamber)
     if(nMuons > 200):
@@ -538,3 +567,4 @@ for chamber in dChambers.keys():
     else:
         print ">>> [%s] Low statistics, so skipping plots" % (chamberPrettyString(*chamberKey))
 
+print ">>> Chamber loop took %.2f seconds" % (time.time() - t0)
