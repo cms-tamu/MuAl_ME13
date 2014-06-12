@@ -512,6 +512,7 @@ void MuonAlignmentFromReference::bookNtupleLayers()
 	m_ttree_CSC_layers->Branch("pt", &(layerData.pt), "pt/F");
 	m_ttree_CSC_layers->Branch("pz", &(layerData.pz), "pz/F");
 	m_ttree_CSC_layers->Branch("eta", &(layerData.eta), "eta/F");
+	m_ttree_CSC_layers->Branch("phi", &(layerData.phi), "phi/F");
 
 
 	m_ttree_CSC_layers->Branch("hit_x", &(layerData.v_hitx), "hit_x[6]/F");

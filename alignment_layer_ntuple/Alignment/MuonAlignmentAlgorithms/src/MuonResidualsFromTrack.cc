@@ -61,6 +61,7 @@ MuonResidualsFromTrack::MuonResidualsFromTrack(const edm::EventSetup& iSetup,
   TransientTrackingRecHit::ConstRecHitContainer recHitsForRefit;
 
   layerData->eta = m_recoTrack->eta();
+  layerData->phi = m_recoTrack->phi();
   layerData->pz = m_recoTrack->pz();
   layerData->pt = m_recoTrack->pt();
   layerData->charge = m_recoTrack->charge();

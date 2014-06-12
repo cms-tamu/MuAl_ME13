@@ -22,6 +22,7 @@ typedef struct CSCLayerData {
     Float_t pt;
     Float_t pz;
     Float_t eta;
+    Float_t phi;
 
     Float_t v_hitx[6], v_hity[6];
     Float_t v_resx[6], v_resy[6];
@@ -45,6 +46,7 @@ typedef struct CSCLayerData {
         pt = BADVAL;
         pz = BADVAL;
         eta = BADVAL;
+        phi = BADVAL;
         doFill = false;
         cutType = "";
         for(int i = 0; i < 6; i++) {
@@ -69,6 +71,7 @@ typedef struct CSCLayerData {
         pt = x.pt;
         pz = x.pz;
         eta = x.eta;
+        phi = x.phi;
         doFill = x.doFill;
         cutType = x.cutType;
 
