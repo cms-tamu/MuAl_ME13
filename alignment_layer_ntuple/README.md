@@ -62,10 +62,10 @@ produces a folder called `layer_plots/` which can then be copied to a web area a
 
 # Cuts
 The optional `--cutTypes` flag allows for one of six cuts to be implemented during the gather jobs. For example, `--cutTypes SIDEBOX` will implement side cuts and box cuts. Cuts are described in detail in https://twiki.cern.ch/twiki/bin/viewauth/CMS/MuAlME13CutComparisons. The tags associated with the various cuts are:
-SIDE
-SIDEBOX
-SIDEBOXFID
-BOX
-BOXFID
-SIDESYMBOXFID
+* SIDE
+* SIDEBOX
+* SIDEBOXFID
+* BOX
+* BOXFID
+* SIDESYMBOXFID
 
