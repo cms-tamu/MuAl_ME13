@@ -28,6 +28,7 @@ r.gErrorIgnoreLevel = r.kWarning
 nSigma = 1.5
 fh = r.TFile(filename,"read")
 tt = fh.Get("csc_layer_ttree")
+foldername = "layer_plots"
 
 
 def chamberRadius(type, station, ringwheel):
@@ -41,14 +42,15 @@ def plotRanges(station, ring):
         if(ring is 1): return 30, 80
         if(ring is 2): return 60, 100
         if(ring is 3): return 60, 100
+        if(ring is 4): return 30, 80
     if(station is 2):
         if(ring is 1): return 80, 120
         if(ring is 2): return 80, 180
     if(station is 3):
-        if(ring is 1): return 80, 150
-        if(ring is 2): return 70, 110
+        if(ring is 1): return 80, 120
+        if(ring is 2): return 80, 180
     if(station is 4):
-        if(ring is 1): return 80, 150
+        if(ring is 1): return 80, 100
         if(ring is 2): return 80, 150
     
     return
@@ -62,7 +64,7 @@ def chamberPrettyString(type, endcap, station, ringwheel, chamber):
         return "MB%s%d/%d/%d" % (prefix, abs(station), ringwheel, chamber)
 
 def chamberToDirectoryPath(type, endcap, station, ringwheel, chamber):
-    dir = "layer_plots/"
+    dir = foldername+"/"
     if(type == "CSC"):
         prefix = "+" if endcap is 1 else "-"
         return "%sME%s/%d/%d/%d/" % (dir,prefix, station, ringwheel, chamber)
@@ -213,8 +215,8 @@ def makePlotsCSC(chamberKey):
     h1D_pt = r.TH1F("h1D_pt", typePrefix+"p_{T};p_{T} (GeV/c);counts",  100, 20, 210)
     h1D_pz = r.TH1F("h1D_pz", typePrefix+"p_{z};p_{z} (GeV/c);counts",  100, 20, 210)
     h1D_p = r.TH1F("h1D_p", typePrefix+"p;p (GeV/c);counts",  100, 20, 210)
-    h1D_phi = r.TH1F("h1D_phi", typePrefix+"#phi;#phi;counts",  800, 0, 6.283)
-    h1D_eta = r.TH1F("h1D_eta", typePrefix+"#eta;#eta;counts",  800, -2.2, 2.2)
+    h1D_phi = r.TH1F("h1D_phi", typePrefix+"#phi;#phi;counts",  800, 0, 6.284)
+    h1D_eta = r.TH1F("h1D_eta", typePrefix+"#eta;#eta;counts",  800, -2.4, 2.4)
     h1D_actual_localy = r.TH1F("h1D_actual_localy", typePrefix+"distribution of actual y hits (on L3);cm;counts",  2*nYbins,-YMax,YMax)
     h1D_tracks_localy = r.TH1F("h1D_tracks_localy", typePrefix+"distribution of track y positions (on L3);cm;counts",  nYbins,-YMax,YMax)
     h1D_actual_angle = r.TH1F("h1D_actual_angle", typePrefix+"angular distribution of hits (on L3);phi;counts",  nYbins,-0.15,0.15)
@@ -223,6 +225,7 @@ def makePlotsCSC(chamberKey):
     h1D_trans_layers = r.TH1F("h1D_trans_layers", typePrefix+"x offset vs layer;layer; x offset (microns)",  6,0.5,6.5  )
     h2D_nlayers_hit = r.TProfile2D("h2D_nlayers_hit", typePrefix+"num layers hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
     h2D_nDT_hit = r.TProfile2D("h2D_nDT_hit", typePrefix+"num DTs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
+    h2D_nDTCSC_hit = r.TProfile2D("h2D_nDTCSC_hit", typePrefix+"num DTs+CSCs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
     h2D_nCSC_hit = r.TProfile2D("h2D_nCSC_hit", typePrefix+"num CSCs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
     h2D_nTracker_hit = r.TProfile2D("h2D_nTracker_hit", typePrefix+"num tracker hits;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
 
@@ -299,6 +302,13 @@ def makePlotsCSC(chamberKey):
                 h1D_actual_angle.Fill(angle)
                 h1D_tracks_angle.Fill(angle_track)
 
+                h2D_nlayers_hit.Fill(actual_x, actual_y, muon.nlayers)
+                h2D_nDT_hit.Fill(actual_x, actual_y, muon.nDT)
+                h2D_nDTCSC_hit.Fill(actual_x, actual_y, muon.nDT+muon.nCSC)
+                h2D_nCSC_hit.Fill(actual_x, actual_y, muon.nCSC)
+                h2D_nTracker_hit.Fill(actual_x, actual_y, muon.nTracker)
+
+
             h1D_res_x[i].Fill(res_x)
             
             h2D_cnt_actual[i].Fill(actual_x, actual_y)
@@ -309,16 +319,10 @@ def makePlotsCSC(chamberKey):
 
             h2D_pull_tracks[i].Fill(track_x, track_y, res_x)
 
-            h2D_nlayers_hit.Fill(actual_x, actual_y, muon.nlayers)
-            h2D_nDT_hit.Fill(actual_x, actual_y, muon.nDT)
-            h2D_nCSC_hit.Fill(actual_x, actual_y, muon.nCSC)
-            h2D_nTracker_hit.Fill(actual_x, actual_y, muon.nTracker)
-
-            if(abs(res_x) <= resRange):
-                h1D_res_x_rproj[i].Fill(rProjection(actual_y,angle,pinRadius), res_x)
-                h1D_res_x_rphiproj[i].Fill(rphi_track, res_x)
-                h1D_res_rphi_yproj[i].Fill(actual_y, res_rphi)
-            
+            h1D_res_x_rproj[i].Fill(rProjection(actual_y,angle,pinRadius), res_x)
+            h1D_res_x_rphiproj[i].Fill(rphi_track, res_x)
+            h1D_res_rphi_yproj[i].Fill(actual_y, res_rphi)
+        
             
     print ">>> [%s] Filled histos" % (prettyStr)
     
@@ -331,6 +335,7 @@ def makePlotsCSC(chamberKey):
     prefix = chamberToDirectoryPath(*chamberKey)
     os.system("mkdir -p %s" % (prefix))
     os.system("cp -pv" + " indexbase.php " + prefix+"_index.php") #
+    os.system("cp -pv" + " summary.php " + foldername + "/" + "summary.php") #
    
     r.gStyle.SetOptStat("rme")
 
@@ -381,6 +386,9 @@ def makePlotsCSC(chamberKey):
             h2D_nDT_hit.GetZaxis().SetRangeUser(0, 4)
             h2D_nDT_hit.Draw("colz")
             c1.SaveAs(prefix + "h2D_nDT_hit" + suffix)
+
+            h2D_nDTCSC_hit.Draw("colz")
+            c1.SaveAs(prefix + "h2D_nDTCSC_hit" + suffix)
 
             h2D_nCSC_hit.GetZaxis().SetRangeUser(0, 4)
             h2D_nCSC_hit.Draw("colz")
@@ -536,7 +544,6 @@ for i,muon in enumerate(tt):
     # ls.append(muon)
     endcap, station, ring, chamber = ord(muon.endcap), ord(muon.station), ord(muon.ring), ord(muon.chamber)
     isCSC = True
-    # change ring to ringwheel in code
     chamberKey = ("CSC" if isCSC else "DT", 0 if not isCSC else endcap, station, ring, chamber)
     
     if(not muon.select): continue
@@ -555,16 +562,19 @@ for i,muon in enumerate(tt):
     else:
         dChambers[chamberKey] = [[i,charge,muon.pz]]
         
-print ">>> Equalization loop took %.2f seconds" % (time.time() - t0)
+print ">>> Index collection loop took %.2f seconds" % (time.time() - t0)
 
 t0 = time.time()
+for chamber in dChambers.keys():
+    print ">>> Found",chamber,"with",len(dChambers[chamber]),"muons"
+
 for chamber in dChambers.keys():
     nMuons = equalizeCharges(chamber)
     if(nMuons > 200):
         t1 = time.time()
         makePlotsCSC(chamber)
-        print ">>> [%s] Took %.2f seconds" % (chamberPrettyString(*chamberKey), time.time() - t1)
+        print ">>> [%s] Took %.2f seconds" % (chamberPrettyString(*chamber), time.time() - t1)
     else:
-        print ">>> [%s] Low statistics, so skipping plots" % (chamberPrettyString(*chamberKey))
+        print ">>> [%s] Low statistics, so skipping plots" % (chamberPrettyString(*chamber))
 
 print ">>> Chamber loop took %.2f seconds" % (time.time() - t0)
