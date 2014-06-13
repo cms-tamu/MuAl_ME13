@@ -69,3 +69,33 @@ The optional `--cutTypes` flag allows for one of six cuts to be implemented duri
 * BOXFID
 * SIDESYMBOXFID
 
+# COMPLETE COPY&PASTE TEST
+The below commands can be completely copied and pasted as a whole to obtain the code, copy it, compile, create and submit a job with a cut ("BOX" in this case).
+```bash
+mkdir layer_info
+cd layer_info
+git clone https://github.com/cms-tamu/MuAl_ME13.git
+cmsrel CMSSW_5_3_6_patch1
+cd CMSSW_5_3_6_patch1/src
+cp -rp ../../MuAl_ME13/alignment_layer_ntuple/* .
+cmsenv
+scram b -j8
+ln -s Alignment/MuonAlignmentAlgorithms/scripts/createJobs.py
+ln -s Alignment/MuonAlignmentAlgorithms/interface/CSCTTree.h
+ln -s Alignment/MuonAlignmentAlgorithms/python/gather_cfg.py
+ln -s Alignment/MuonAlignmentAlgorithms/plugins/MuonAlignmentFromReference.cc
+ln -s Alignment/MuonAlignmentAlgorithms/python/align_cfg.py
+ln -s Alignment/MuonAlignmentAlgorithms/src/MuonResidualsFromTrack.cc
+ln -s Alignment/MuonAlignmentAlgorithms/scripts/layerPlots.py
+ln -s Alignment/MuonAlignmentAlgorithms/python/MuonAlignmentFromReference_cfi.py
+./createJobs.py MuonFilter_2012_MEp_1_3_17_MC_TEST_ 1 idealGeometry.db Cert_singleMuonGun_MC_MEp_1_3_17_ABRIDGED_V2.py \
+-s MuonFilter_2012_MEp_1_3_17_MC_TEST.sh --validationLabel MuonFilter_2012_MEp_1_3_17_MC_TEST \
+--user_mail 157866test@gmail.com --minTrackPt 30 --maxTrackPt 200 --maxDxy 0.2 --minNCrossedChambers 1 \
+--residualsModel pureGaussian --peakNSigma 2. --station123params 000010 --station4params 000010 --cscparams 100001 \
+--useResiduals 1100 --noDT --mapplots --curvatureplots --segdiffplots --extraPlots --globalTag MC_53_V14::All \
+--gprcd inertGlobalPositionRcd --gprcdconnect sqlite_file:inertGlobalPositionRcd.db  --createAlignNtuple -j 2 --cutTypes BOX \
+--isMC --createLayerNtuple --layerPlots
+. MuonFilter_2012_MEp_1_3_17_MC_TEST.sh
+bjobs -w
+```
+Afterwards, you may extract the output `*_layer_plots.tgz` file and copy it to a web directory. Navigate to `layer_plots/summary.php` and click on a few plots to ensure everything is working correctly. The 2D occupancy plots should confirm that the cut was implemented correctly.
