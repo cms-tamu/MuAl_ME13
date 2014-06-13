@@ -334,8 +334,8 @@ def makePlotsCSC(chamberKey):
     
     prefix = chamberToDirectoryPath(*chamberKey)
     os.system("mkdir -p %s" % (prefix))
-    os.system("cp -pv" + " indexbase.php " + prefix+"_index.php") #
-    os.system("cp -pv" + " summary.php " + foldername + "/" + "summary.php") #
+    os.system("cp -p" + " indexbase.php " + prefix+"_index.php") 
+    os.system("cp -p" + " summary.php " + foldername + "/") 
    
     r.gStyle.SetOptStat("rme")
 

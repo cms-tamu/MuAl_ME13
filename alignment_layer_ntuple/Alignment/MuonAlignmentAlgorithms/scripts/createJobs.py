@@ -600,6 +600,7 @@ cp -f convertSQLiteXML.py $ALIGNMENT_CAFDIR/
 cp -f wrapperExtraPlots.sh $ALIGNMENT_CAFDIR/
 cp -f layerPlots.py $ALIGNMENT_CAFDIR/
 cp -f indexbase.php $ALIGNMENT_CAFDIR/
+cp -f summary.php $ALIGNMENT_CAFDIR/
 cd -
 cp Alignment/MuonAlignmentAlgorithms/test/browser/tree* $ALIGNMENT_CAFDIR/out/
 
