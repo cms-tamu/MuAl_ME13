@@ -94,6 +94,12 @@ def fixFlooredBins(hist,minZ=-3.5):
             if(mu <= minZ):
                 hist.SetBinContent(x,y,minZ)
 
+def zoomXrange(h):
+    nonEmptyBins = [(e,h.GetXaxis().GetBinCenter(e)) for e in range(h.GetNbinsX()) if h.GetBinContent(e)>0] 
+    minX, maxX = min(nonEmptyBins)[1], max(nonEmptyBins)[1]
+    tolerance = (maxX-minX)*0.15
+    h.GetXaxis().SetRangeUser(minX-tolerance,maxX+tolerance)
+
 def binData(indexPt, Nbins, minPt):
     d = {}
 
@@ -138,6 +144,8 @@ else:
 
 nXbins, nYbins = 50, 50
 XMax, YMax = 60., 100.
+xyRatio = YMax/XMax 
+
 resRange = 8.0
 NUMLAYERS = 6
 
@@ -160,27 +168,28 @@ h1D_actual_angle = r.TH1F("h1D_actual_angle", typePrefix+"angular distribution o
 h1D_tracks_angle = r.TH1F("h1D_tracks_angle", typePrefix+"angular distribution of tracks (on L3);phi;counts",  nYbins,-0.08,0.08)
 h1D_rot_dxdr_layers = r.TH1F("h1D_rot_dxdr_layers", typePrefix+"phiz (dx/dr) vs layer;layer;dx/dr (urad)",  6,0.5,6.5  )
 h1D_trans_layers = r.TH1F("h1D_trans_layers", typePrefix+"x offset vs layer;layer; x offset (microns)",  6,0.5,6.5  )
-h2D_nlayers_hit = r.TProfile2D("h2D_nlayers_hit", typePrefix+"num layers hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
-h2D_nDT_hit = r.TProfile2D("h2D_nDT_hit", typePrefix+"num DTs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
-h2D_nCSC_hit = r.TProfile2D("h2D_nCSC_hit", typePrefix+"num CSCs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
-h2D_nTracker_hit = r.TProfile2D("h2D_nTracker_hit", typePrefix+"num tracker hits;actual hit x;actual hit y",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)
-h1D_pt = r.TH1F("h1D_pt", typePrefix+"p_T;p_T (GeV/c);counts",  100, 20, 210)
-h1D_pz = r.TH1F("h1D_pz", typePrefix+"p_z;p_z (GeV/c);counts",  100, 20, 210)
-h1D_p = r.TH1F("h1D_p", typePrefix+"p;p (GeV/c);counts",  100, 20, 210)
-h1D_eta = r.TH1F("h1D_eta", typePrefix+"eta;eta;counts",  150, -2.4, 2.4)
+h2D_nlayers_hit = r.TProfile2D("h2D_nlayers_hit", typePrefix+"num layers hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)
+h2D_nDT_hit = r.TProfile2D("h2D_nDT_hit", typePrefix+"num DTs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)
+h2D_nCSC_hit = r.TProfile2D("h2D_nCSC_hit", typePrefix+"num CSCs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)
+h2D_nDTCSC_hit = r.TProfile2D("h2D_nDTCSC_hit", typePrefix+"num DTs+CSCs hit;actual hit x;actual hit y",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)
+h2D_nTracker_hit = r.TProfile2D("h2D_nTracker_hit", typePrefix+"num tracker hits;actual hit x;actual hit y",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)
+h1D_pt = r.TH1F("h1D_pt", typePrefix+"p_{T};p_{T} (GeV/c);counts",  100, 20, 210)
+h1D_pz = r.TH1F("h1D_pz", typePrefix+"p_{z};p_{z} (GeV/c);counts",  100, 20, 210)
+h1D_p = r.TH1F("h1D_p", typePrefix+"p;p (GeV/c);counts",  100, 20, 210) 
+h1D_eta = r.TH1F("h1D_eta", typePrefix+"#eta;#eta;counts", 800, -2.2, 2.2) 
 
 
 for i in range(NUMLAYERS):
     laypfx = " #font[2]{L" + str(i+1) + "} "
     print ">>> Booking histos for layer",i+1
-    h2D_cnt_actual.append(  r.TH2F(laypfx + "h2D_cnt_actual", typePrefix+laypfx + "actual hit locations;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
-    h2D_cnt_tracks.append(  r.TH2F(laypfx + "h2D_cnt_tracks", typePrefix+laypfx + "track locations;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
+    h2D_cnt_actual.append(  r.TH2F(laypfx + "h2D_cnt_actual", typePrefix+laypfx + "actual hit locations;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)  )
+    h2D_cnt_tracks.append(  r.TH2F(laypfx + "h2D_cnt_tracks", typePrefix+laypfx + "track locations;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)  )
 
-    h2D_res_x_actual.append(  r.TProfile2D(laypfx + "h2D_res_x_actual", typePrefix+laypfx + "avg (per bin) x residuals at actual hit positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
-    h2D_res_x_tracks.append(  r.TProfile2D(laypfx + "h2D_res_x_tracks", typePrefix+laypfx + "avg (per bin) x residuals at track positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
+    h2D_res_x_actual.append(  r.TProfile2D(laypfx + "h2D_res_x_actual", typePrefix+laypfx + "avg x res at actual hit positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)  )
+    h2D_res_x_tracks.append(  r.TProfile2D(laypfx + "h2D_res_x_tracks", typePrefix+laypfx + "avg x res at track positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)  )
 
-    h2D_pull_tracks.append(  r.TProfile2D(laypfx + "h2D_pull_tracks", typePrefix+laypfx + "sum of x residuals (pull) at track positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
-    h2D_statsig_tracks.append(  r.TH2F(laypfx + "h2D_statsig_tracks", typePrefix+laypfx + "avg res_x / sigma (significance) at track positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  nYbins, -YMax,YMax)  )
+    h2D_pull_tracks.append(  r.TProfile2D(laypfx + "h2D_pull_tracks", typePrefix+laypfx + "pull at track positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)  )
+    h2D_statsig_tracks.append(  r.TH2F(laypfx + "h2D_statsig_tracks", typePrefix+laypfx + "significance at track positions;local x (cm);local y (cm)",  nXbins,-XMax,XMax,  int(nXbins*xyRatio), -YMax,YMax)  )
 
     h1D_res_x.append(  r.TH1F(laypfx + "h1D_res_x", typePrefix+laypfx + "x residuals;x residual (cm);counts",  100,-resRange,resRange)  )
 
@@ -261,6 +270,8 @@ for idx, muon in enumerate(tt):
                 actual_x, actual_y = eval(layStr+"x"), eval(layStr+"y")
                 res_x, res_y = eval(layStr+"res_x"), eval(layStr+"res_y")
 
+            # roughly discard tails
+            if(abs(res_x) > resRange): continue 
 
             # propagated track = actual + residual
             track_x = actual_x + res_x
@@ -289,6 +300,13 @@ for idx, muon in enumerate(tt):
                 h1D_actual_angle.Fill(angle)
                 h1D_tracks_angle.Fill(angle_track)
 
+                h2D_nlayers_hit.Fill(actual_x, actual_y, muon.nlayers)
+                h2D_nDT_hit.Fill(actual_x, actual_y, muon.nDT)
+                h2D_nCSC_hit.Fill(actual_x, actual_y, muon.nCSC)
+                h2D_nDTCSC_hit.Fill(actual_x, actual_y, muon.nCSC+muon.nDT)
+                h2D_nTracker_hit.Fill(actual_x, actual_y, muon.nTracker)
+
+
             h1D_res_x[i].Fill(res_x)
             
             h2D_cnt_actual[i].Fill(actual_x, actual_y)
@@ -299,20 +317,15 @@ for idx, muon in enumerate(tt):
 
             h2D_pull_tracks[i].Fill(track_x, track_y, res_x)
 
-            h2D_nlayers_hit.Fill(actual_x, actual_y, muon.nlayers)
-            h2D_nDT_hit.Fill(actual_x, actual_y, muon.nDT)
-            h2D_nCSC_hit.Fill(actual_x, actual_y, muon.nCSC)
-            h2D_nTracker_hit.Fill(actual_x, actual_y, muon.nTracker)
-
-            if(abs(res_x) <= resRange):
-                h1D_res_x_rproj[i].Fill(rProjection(actual_y,angle), res_x)
-                h1D_res_x_rphiproj[i].Fill(rphi_track, res_x)
-                h1D_res_rphi_yproj[i].Fill(actual_y, res_rphi)
+            h1D_res_x_rproj[i].Fill(rProjection(actual_y,angle), res_x)
+            h1D_res_x_rphiproj[i].Fill(rphi_track, res_x)
+            h1D_res_rphi_yproj[i].Fill(actual_y, res_rphi)
        
 
 c1.SetRightMargin(0.32);
 c1.SetGridx()
 c1.SetGridy()
+c1.SetCanvasSize(696,472)
 
 
 os.system("mkdir -p " + prefix)
@@ -340,6 +353,7 @@ for i in range(NUMLAYERS):
         h1D_p.Draw()
         c1.SaveAs(prefix + "h1D_p" + suffix)
 
+        zoomXrange(h1D_eta)
         h1D_eta.Draw()
         c1.SaveAs(prefix + "h1D_eta" + suffix)
 
@@ -357,24 +371,34 @@ for i in range(NUMLAYERS):
         c1.SaveAs(prefix + "h1D_localy_tracks" + suffix)
 
         
+        c1.SetCanvasSize(555,672)
+
         h2D_nlayers_hit.Draw("colz")
         c1.SaveAs(prefix + "h2D_nlayers_hit" + suffix)
 
-        h2D_nDT_hit.GetZaxis().SetRangeUser(0, 4)
+        h2D_nDT_hit.GetZaxis().SetRangeUser(0, 5)
         h2D_nDT_hit.Draw("colz")
         c1.SaveAs(prefix + "h2D_nDT_hit" + suffix)
 
-        h2D_nCSC_hit.GetZaxis().SetRangeUser(0, 4)
+        h2D_nCSC_hit.GetZaxis().SetRangeUser(0, 5)
         h2D_nCSC_hit.Draw("colz")
         c1.SaveAs(prefix + "h2D_nCSC_hit" + suffix)
+
+        h2D_nDTCSC_hit.GetZaxis().SetRangeUser(0, 5)
+        h2D_nDTCSC_hit.Draw("colz")
+        c1.SaveAs(prefix + "h2D_nDTCSC_hit" + suffix)
 
         h2D_nTracker_hit.GetZaxis().SetRangeUser(0, 21)
         h2D_nTracker_hit.Draw("colz")
         c1.SaveAs(prefix + "h2D_nTracker_hit" + suffix)
+        
+        c1.SetCanvasSize(696,472)
 
 
-    for x in range(nXbins):
-        for y in range(nYbins):
+    c1.SetCanvasSize(555,672)
+
+    for x in range(h2D_res_x_tracks[i].GetNbinsX()): 
+        for y in range(h2D_res_x_tracks[i].GetNbinsY()): 
             mu = h2D_res_x_tracks[i].GetBinContent(x,y)
             sig = h2D_res_x_tracks[i].GetBinError(x,y)
             ibin = h2D_res_x_tracks[i].GetBin(x,y)
@@ -408,8 +432,8 @@ for i in range(NUMLAYERS):
     r.gStyle.SetNumberContours(ncontours)
 
     # multiply avg resx by hit occupancy to get "force" of pulling
-    for x in range(nXbins):
-        for y in range(nYbins):
+    for x in range(h2D_pull_tracks[i].GetNbinsX()): 
+        for y in range(h2D_pull_tracks[i].GetNbinsY()): 
             ibin = h2D_pull_tracks[i].GetBin(x,y)
             mu = h2D_pull_tracks[i].GetBinContent(ibin)
             entries = h2D_pull_tracks[i].GetBinEntries(ibin)
@@ -430,6 +454,8 @@ for i in range(NUMLAYERS):
     fixFlooredBins(h2D_res_x_tracks[i], minZ=-3.5)
     h2D_res_x_tracks[i].Draw("colz")
     c1.SaveAs(prefix + "h2D_res_x_tracks" + suffix)
+
+    c1.SetCanvasSize(696,472)
 
 
     r.gStyle.SetOptFit(1) # display fitting parameters
