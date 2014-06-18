@@ -177,6 +177,7 @@ h1D_pt = r.TH1F("h1D_pt", typePrefix+"p_{T};p_{T} (GeV/c);counts",  100, 20, 210
 h1D_pz = r.TH1F("h1D_pz", typePrefix+"p_{z};p_{z} (GeV/c);counts",  100, 20, 210)
 h1D_p = r.TH1F("h1D_p", typePrefix+"p;p (GeV/c);counts",  100, 20, 210) 
 h1D_eta = r.TH1F("h1D_eta", typePrefix+"#eta;#eta;counts", 800, -2.2, 2.2) 
+h1D_phi = r.TH1F("h1D_phi", typePrefix+"#phi;#phi;counts",  800, -math.pi, math.pi)
 
 
 for i in range(NUMLAYERS):
@@ -260,6 +261,9 @@ for idx, muon in enumerate(tt):
         h1D_pz.Fill(muon.pz)
         h1D_p.Fill(math.sqrt(muon.pt*muon.pt+muon.pz*muon.pz))
         h1D_eta.Fill(muon.eta)
+        phi = muon.phi
+        #if(muon.phi < 0): phi += 2*3.14159265
+        h1D_phi.Fill(phi)
 
         for i in range(NUMLAYERS):
             try:
@@ -352,6 +356,10 @@ for i in range(NUMLAYERS):
 
         h1D_p.Draw()
         c1.SaveAs(prefix + "h1D_p" + suffix)
+
+        h1D_phi.Draw()
+        zoomXrange(h1D_phi)
+        c1.SaveAs(prefix + "h1D_phi" + suffix)
 
         zoomXrange(h1D_eta)
         h1D_eta.Draw()

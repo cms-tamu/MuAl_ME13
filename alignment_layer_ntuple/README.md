@@ -54,6 +54,8 @@ This will run over 20k events and should take no more than 15 minutes to run.
 
 Note that the `--isMC` flag was added to accomodate MC inputs. `--createLayerNtuple` collects layer information and places it in the *_plotting.root file inside of the alignment job's directory. `--layerPlots` will take this layer information and produce plots in a tree-like directory structure. Each folder will contain a PHP file allowing for easy viewing of the plots in the directories if they are copied over to a website. If a chamber receives less than 200 tracks, it will not be considered for plotting.
 
+Also note that the `--b` tag is used to tell `createJobs.py` that jobs will be *b*ig, thus forcing them to use the daily queue instead of the hourly queue by default.
+
 In this example, `MuonFilter_2012_MEp_1_3_17_MC_TEST_01/MuonFilter_2012_MEp_1_3_17_MC_TEST_01_plotting.root` will contain a TTree `csc_layer_ttree` with layer information. The .tgz file in the `CMSSW_5_3_6_patch1/src` directory that normally contains the plots will be accompanied by another .tgz file with the layer plots, for example (timestamp will be different),  `MuonFilter_2012_MEp_1_3_17_MC_TEST_20140528235539_layer_plots.tgz`. Doing
 ``` bash
 tar xzf MuonFilter_2012_MEp_1_3_17_MC_TEST_20140528235539_layer_plots.tgz
